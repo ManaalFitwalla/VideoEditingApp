@@ -30,7 +30,9 @@ class SplashActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_splash)
 
-        checkPermission()
+        window.decorView.postDelayed({
+            checkPermission()
+        }, 2000)
     }
 
     private fun checkPermission() {
