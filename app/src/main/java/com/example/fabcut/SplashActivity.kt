@@ -22,7 +22,7 @@ class SplashActivity : AppCompatActivity() {
                 permissions[Manifest.permission.READ_MEDIA_VIDEO] == true
 
             if (imagesGranted && videosGranted) {
-                openMainActivity()
+                openHomeActivity()
             }
         }
 
@@ -48,7 +48,7 @@ class SplashActivity : AppCompatActivity() {
         if (imagesPermission == PackageManager.PERMISSION_GRANTED &&
             videosPermission == PackageManager.PERMISSION_GRANTED
         ) {
-            openMainActivity()
+            openHomeActivity()
         } else {
 
             permissionLauncher.launch(
@@ -60,8 +60,8 @@ class SplashActivity : AppCompatActivity() {
         }
     }
 
-    private fun openMainActivity() {
-        startActivity(Intent(this, MainActivity::class.java))
+    private fun openHomeActivity() {
+        startActivity(Intent(this, HomeActivity::class.java))
         finish()
     }
 }
