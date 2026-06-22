@@ -63,7 +63,7 @@ class SplashActivity : AppCompatActivity() {
     }
 
     private fun openMainActivity() {
-        startActivity(Intent(this, MainActivity::class.java))
+        startActivity(Intent(this, GalleryActivity::class.java))
         finish()
     }
 }
