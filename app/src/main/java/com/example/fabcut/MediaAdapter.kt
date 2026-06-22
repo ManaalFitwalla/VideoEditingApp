@@ -1,5 +1,5 @@
 package com.example.fabcut
-
+import com.bumptech.glide.Glide
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -42,7 +42,10 @@ class MediaAdapter(
 
         val mediaItem = mediaList[position]
 
-        holder.imageView.setImageURI(mediaItem.uri)
+        Glide.with(holder.itemView.context)
+            .load(mediaItem.uri)
+            .centerCrop()
+            .into(holder.imageView)
 
         if (mediaItem.isSelected) {
 
