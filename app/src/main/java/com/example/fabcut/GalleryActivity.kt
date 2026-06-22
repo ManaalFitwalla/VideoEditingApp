@@ -1,62 +1,105 @@
 package com.example.fabcut
-import android.provider.MediaStore
+
 import android.net.Uri
 import android.os.Bundle
+import android.provider.MediaStore
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 
 class GalleryActivity : AppCompatActivity() {
-    val mediaList = ArrayList<MediaItem>()
-    private lateinit var mediaAdapter: MediaAdapter
+
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var adapter: MediaAdapter
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContentView(R.layout.activity_gallery)
 
-        val recyclerView = findViewById<RecyclerView>(R.id.recyclerView)
+        recyclerView = findViewById(R.id.recyclerView)
 
         recyclerView.layoutManager = GridLayoutManager(this, 3)
 
+        val mediaType =
+            intent.getStringExtra("MEDIA_TYPE") ?: "PHOTO"
 
-        mediaAdapter = MediaAdapter(mediaList)
-        recyclerView.adapter = mediaAdapter
-        loadImages()}
-    private fun loadImages() {
+        val mediaList = loadMedia(mediaType)
 
-        val collection = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+        adapter = MediaAdapter(mediaList)
+
+        recyclerView.adapter = adapter
+    }
+
+    private fun loadMedia(type: String): MutableList<MediaItem> {
+
+        val mediaList = mutableListOf<MediaItem>()
 
         val projection = arrayOf(
-            MediaStore.Images.Media._ID
+            MediaStore.Files.FileColumns._ID,
+            MediaStore.Files.FileColumns.MEDIA_TYPE
         )
 
+        val mediaTypeValue =
+            if (type == "PHOTO")
+                MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE
+            else
+                MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO
+
+        val selection =
+            "${MediaStore.Files.FileColumns.MEDIA_TYPE}=?"
+
+        val selectionArgs =
+            arrayOf(mediaTypeValue.toString())
+
+        val uri = MediaStore.Files.getContentUri("external")
+
         val cursor = contentResolver.query(
-            collection,
+            uri,
             projection,
-            null,
-            null,
-            MediaStore.Images.Media.DATE_ADDED + " DESC"
+            selection,
+            selectionArgs,
+            "${MediaStore.Files.FileColumns.DATE_ADDED} DESC"
         )
 
         cursor?.use {
 
-            val idColumn = it.getColumnIndexOrThrow(
-                MediaStore.Images.Media._ID
-            )
+            val idColumn =
+                it.getColumnIndexOrThrow(MediaStore.Files.FileColumns._ID)
+
+            val typeColumn =
+                it.getColumnIndexOrThrow(MediaStore.Files.FileColumns.MEDIA_TYPE)
 
             while (it.moveToNext()) {
 
                 val id = it.getLong(idColumn)
+                val mediaType = it.getInt(typeColumn)
 
-                val uri = Uri.withAppendedPath(
-                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                    id.toString()
-                )
+                val contentUri: Uri =
+                    if (mediaType == MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE) {
+
+                        Uri.withAppendedPath(
+                            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                            id.toString()
+                        )
+
+                    } else {
+
+                        Uri.withAppendedPath(
+                            MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
+                            id.toString()
+                        )
+                    }
 
                 mediaList.add(
-                    MediaItem(uri.toString())
+                    MediaItem(
+                        contentUri,
+                        mediaType == MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO
+                    )
                 )
             }
         }
-        mediaAdapter.notifyDataSetChanged()
+
+        return mediaList
     }
 }

@@ -1,5 +1,9 @@
 package com.example.fabcut
 
+import android.net.Uri
+
 data class MediaItem(
-    val uri: String
+    val uri: Uri,
+    val isVideo: Boolean,
+    var isSelected: Boolean = false
 )

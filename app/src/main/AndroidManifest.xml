@@ -14,6 +14,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.FabCut">
         <activity
+            android:name=".HomeActivity"
+            android:exported="false" />
+        <activity
+            android:name=".HomeActivity"
+            android:exported="false" />
+        <activity
             android:name=".GalleryActivity"
             android:exported="false" />
         <activity
