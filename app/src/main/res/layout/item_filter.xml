@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<TextView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/txtFilter"
+    android:layout_width="wrap_content"
+    android:layout_height="45dp"
+    android:layout_margin="6dp"
+    android:paddingStart="18dp"
+    android:paddingEnd="18dp"
+    android:gravity="center"
+    android:text="Filter"
+    android:textColor="#FFFFFF"
+    android:textStyle="bold"
+    android:textSize="14sp"
+    android:background="@drawable/filter_bg" />

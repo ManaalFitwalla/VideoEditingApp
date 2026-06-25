@@ -9,17 +9,20 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:paddingTop="50dp">
 
         <TextView
             android:id="@+id/txtSelectedCount"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="0 Selected"
+            android:text="0 / 20 Selected"
             android:textSize="18sp"
             android:textStyle="bold"
             android:textColor="#2196F3"
-            android:layout_margin="12dp"/>
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="12dp"
+            android:layout_marginBottom="8dp"/>
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recyclerView"
@@ -27,7 +30,15 @@
             android:layout_height="0dp"
             android:layout_weight="1"/>
 
-    </LinearLayout>
+        <Button
+            android:id="@+id/btnProceed"
+            android:layout_width="match_parent"
+            android:layout_height="55dp"
+            android:layout_margin="12dp"
+            android:text="Proceed"
+            android:textStyle="bold"
+            android:visibility="gone"/>
 
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
