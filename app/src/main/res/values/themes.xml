@@ -5,5 +5,8 @@
         <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
     </style>
 
-    <style name="Theme.FabCut" parent="Base.Theme.FabCut" />
+    <style name="Theme.FabCut" parent="Base.Theme.FabCut" /><style name="RoundedImage">
+    <item name="cornerFamily">rounded</item>
+    <item name="cornerSize">18dp</item>
+</style>
 </resources>

@@ -14,7 +14,10 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.FabCut">
         <activity
-            android:name=".HomeActivity"
+            android:name=".EditorActivity"
+            android:exported="false" />
+        <activity
+            android:name=".PreviewActivity"
             android:exported="false" />
         <activity
             android:name=".HomeActivity"

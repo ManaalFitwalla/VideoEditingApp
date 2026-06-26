@@ -1,15 +1,20 @@
 package com.example.fabcut
-import com.bumptech.glide.Glide
-
+import android.widget.TextView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.ImageView
+import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
+import com.bumptech.glide.request.RequestOptions
+import jp.wasabeef.glide.transformations.RoundedCornersTransformation
 
 class MediaAdapter(
-    private val mediaList: MutableList<MediaItem>
+    private val mediaList: MutableList<MediaItem>,
+    private val onLongClick: (MediaItem) -> Unit,
+    private val onSelectionChanged: (Int) -> Unit
 ) : RecyclerView.Adapter<MediaAdapter.MediaViewHolder>() {
 
     class MediaViewHolder(itemView: View) :
@@ -18,7 +23,7 @@ class MediaAdapter(
         val imageView: ImageView =
             itemView.findViewById(R.id.imageView)
 
-        val checkIcon: ImageView =
+        val checkIcon: TextView =
             itemView.findViewById(R.id.checkIcon)
 
         val container: FrameLayout =
@@ -45,7 +50,15 @@ class MediaAdapter(
 
         Glide.with(holder.itemView.context)
             .load(mediaItem.uri)
-            .centerCrop()
+            .apply(
+                RequestOptions.bitmapTransform(
+                    RoundedCornersTransformation(
+                        24,
+                        0,
+                        RoundedCornersTransformation.CornerType.ALL
+                    )
+                )
+            )
             .into(holder.imageView)
 
         if (mediaItem.isSelected) {
@@ -65,9 +78,48 @@ class MediaAdapter(
 
         holder.itemView.setOnClickListener {
 
-            mediaItem.isSelected = !mediaItem.isSelected
+            val maxLimit =
+                if (mediaItem.isVideo) 1 else 10
+
+            val selectedCount =
+                mediaList.count {
+                    it.isSelected &&
+                            it.isVideo == mediaItem.isVideo
+                }
+
+            if (
+                !mediaItem.isSelected &&
+                selectedCount >= maxLimit
+            ) {
+
+                Toast.makeText(
+                    holder.itemView.context,
+                    if (mediaItem.isVideo)
+                        "You can select up to 1 video at a time."
+                    else
+                        "You can select up to 10 photos at a time.",
+                    Toast.LENGTH_SHORT
+                ).show()
+
+                return@setOnClickListener
+            }
+
+            mediaItem.isSelected =
+                !mediaItem.isSelected
 
             notifyItemChanged(position)
+
+            val totalSelected =
+                mediaList.count { it.isSelected }
+
+            onSelectionChanged(totalSelected)
+        }
+
+        holder.itemView.setOnLongClickListener {
+
+            onLongClick(mediaItem)
+
+            true
         }
     }
 
