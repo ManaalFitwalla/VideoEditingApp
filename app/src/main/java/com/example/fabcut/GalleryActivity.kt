@@ -4,6 +4,8 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
+import android.view.View
+import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
@@ -14,6 +16,9 @@ class GalleryActivity : AppCompatActivity() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: MediaAdapter
     private lateinit var txtSelectedCount: TextView
+    private lateinit var btnProceed: Button
+
+    private lateinit var mediaList: MutableList<MediaItem>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -22,6 +27,9 @@ class GalleryActivity : AppCompatActivity() {
 
         txtSelectedCount =
             findViewById(R.id.txtSelectedCount)
+
+        btnProceed =
+            findViewById(R.id.btnProceed)
 
         recyclerView =
             findViewById(R.id.recyclerView)
@@ -33,10 +41,22 @@ class GalleryActivity : AppCompatActivity() {
             ItemSpacingDecoration(8)
         )
 
+        btnProceed.visibility = View.GONE
+
         val mediaType =
             intent.getStringExtra("MEDIA_TYPE") ?: "PHOTO"
 
-        val mediaList = loadMedia(mediaType)
+        val maxLimit =
+            if (mediaType == "VIDEO")
+                10
+            else
+                20
+
+        txtSelectedCount.text =
+            "0 / $maxLimit Selected"
+
+        mediaList =
+            loadMedia(mediaType)
 
         adapter = MediaAdapter(
 
@@ -44,40 +64,86 @@ class GalleryActivity : AppCompatActivity() {
 
             { mediaItem ->
 
-                val intent =
-                    Intent(this, PreviewActivity::class.java)
+                val previewIntent =
+                    Intent(
+                        this,
+                        PreviewActivity::class.java
+                    )
 
-                intent.putExtra(
+                previewIntent.putExtra(
                     "MEDIA_URI",
                     mediaItem.uri.toString()
                 )
 
-                intent.putExtra(
+                previewIntent.putExtra(
                     "IS_VIDEO",
                     mediaItem.isVideo
                 )
 
-                startActivity(intent)
+                startActivity(previewIntent)
             },
 
             { count ->
 
                 txtSelectedCount.text =
-                    "$count Items Selected"
+                    "$count / $maxLimit Selected"
+
+                btnProceed.visibility =
+                    if (count > 0)
+                        View.VISIBLE
+                    else
+                        View.GONE
             }
         )
 
-        recyclerView.adapter = adapter
+        recyclerView.adapter =
+            adapter
+
+        btnProceed.setOnClickListener {
+
+            val selectedUris =
+                ArrayList<String>()
+
+            mediaList.forEach {
+
+                if (it.isSelected) {
+
+                    selectedUris.add(
+                        it.uri.toString()
+                    )
+                }
+            }
+
+            if (selectedUris.isNotEmpty()) {
+
+                val editorIntent =
+                    Intent(
+                        this,
+                        EditorActivity::class.java
+                    )
+
+                editorIntent.putStringArrayListExtra(
+                    "SELECTED_MEDIA",
+                    selectedUris
+                )
+
+                startActivity(editorIntent)
+            }
+        }
     }
 
-    private fun loadMedia(type: String): MutableList<MediaItem> {
+    private fun loadMedia(
+        type: String
+    ): MutableList<MediaItem> {
 
-        val mediaList = mutableListOf<MediaItem>()
+        val mediaList =
+            mutableListOf<MediaItem>()
 
-        val projection = arrayOf(
-            MediaStore.Files.FileColumns._ID,
-            MediaStore.Files.FileColumns.MEDIA_TYPE
-        )
+        val projection =
+            arrayOf(
+                MediaStore.Files.FileColumns._ID,
+                MediaStore.Files.FileColumns.MEDIA_TYPE
+            )
 
         val mediaTypeValue =
             if (type == "PHOTO")
@@ -89,17 +155,23 @@ class GalleryActivity : AppCompatActivity() {
             "${MediaStore.Files.FileColumns.MEDIA_TYPE}=?"
 
         val selectionArgs =
-            arrayOf(mediaTypeValue.toString())
+            arrayOf(
+                mediaTypeValue.toString()
+            )
 
-        val uri = MediaStore.Files.getContentUri("external")
+        val uri =
+            MediaStore.Files.getContentUri(
+                "external"
+            )
 
-        val cursor = contentResolver.query(
-            uri,
-            projection,
-            selection,
-            selectionArgs,
-            "${MediaStore.Files.FileColumns.DATE_ADDED} DESC"
-        )
+        val cursor =
+            contentResolver.query(
+                uri,
+                projection,
+                selection,
+                selectionArgs,
+                "${MediaStore.Files.FileColumns.DATE_ADDED} DESC"
+            )
 
         cursor?.use {
 
@@ -115,10 +187,14 @@ class GalleryActivity : AppCompatActivity() {
 
             while (it.moveToNext()) {
 
-                val id = it.getLong(idColumn)
-                val mediaType = it.getInt(typeColumn)
+                val id =
+                    it.getLong(idColumn)
+
+                val mediaType =
+                    it.getInt(typeColumn)
 
                 val contentUri: Uri =
+
                     if (
                         mediaType ==
                         MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE
