@@ -4,6 +4,7 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
+    android:background="@drawable/app_bg"
     android:layout_height="match_parent">
 
     <LinearLayout
@@ -30,15 +31,20 @@
             android:layout_height="0dp"
             android:layout_weight="1"/>
 
-        <Button
-            android:id="@+id/btnProceed"
-            android:layout_width="match_parent"
-            android:layout_height="55dp"
-            android:layout_margin="12dp"
-            android:text="Proceed"
-            android:textStyle="bold"
-            android:visibility="gone"/>
+
 
     </LinearLayout>
+    <Button
+        android:id="@+id/btnProceed"
+        android:layout_width="wrap_content"
+        android:layout_height="55dp"
+        android:layout_marginBottom="45dp"
+        android:layout_marginEnd="20dp"
+        android:backgroundTint="#ff8387"
+        android:text="Proceed"
+        android:textStyle="bold"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

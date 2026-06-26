@@ -50,10 +50,14 @@ class GalleryActivity : AppCompatActivity() {
             if (mediaType == "VIDEO")
                 10
             else
-                20
+                10
 
-        txtSelectedCount.text =
-            "0 / $maxLimit Selected"
+        if (mediaType == "VIDEO") {
+            txtSelectedCount.visibility = View.GONE
+        } else {
+            txtSelectedCount.visibility = View.VISIBLE
+            txtSelectedCount.text = "0 / $maxLimit Selected"
+        }
 
         mediaList =
             loadMedia(mediaType)

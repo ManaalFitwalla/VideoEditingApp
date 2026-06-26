@@ -1,5 +1,5 @@
 package com.example.fabcut
-
+import android.widget.TextView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -23,7 +23,7 @@ class MediaAdapter(
         val imageView: ImageView =
             itemView.findViewById(R.id.imageView)
 
-        val checkIcon: ImageView =
+        val checkIcon: TextView =
             itemView.findViewById(R.id.checkIcon)
 
         val container: FrameLayout =
@@ -79,7 +79,7 @@ class MediaAdapter(
         holder.itemView.setOnClickListener {
 
             val maxLimit =
-                if (mediaItem.isVideo) 10 else 20
+                if (mediaItem.isVideo) 1 else 10
 
             val selectedCount =
                 mediaList.count {
@@ -95,9 +95,9 @@ class MediaAdapter(
                 Toast.makeText(
                     holder.itemView.context,
                     if (mediaItem.isVideo)
-                        "You can select up to 10 videos at a time."
+                        "You can select up to 1 video at a time."
                     else
-                        "You can select up to 20 photos at a time.",
+                        "You can select up to 10 photos at a time.",
                     Toast.LENGTH_SHORT
                 ).show()
 
