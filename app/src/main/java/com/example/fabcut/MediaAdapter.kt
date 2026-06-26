@@ -1,16 +1,15 @@
 package com.example.fabcut
-
+import android.widget.TextView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.ImageView
+import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-import com.bumptech.glide.load.resource.bitmap.CenterCrop
-import jp.wasabeef.glide.transformations.RoundedCornersTransformation
 import com.bumptech.glide.request.RequestOptions
-import android.widget.Toast
+import jp.wasabeef.glide.transformations.RoundedCornersTransformation
 
 class MediaAdapter(
     private val mediaList: MutableList<MediaItem>,
@@ -24,7 +23,7 @@ class MediaAdapter(
         val imageView: ImageView =
             itemView.findViewById(R.id.imageView)
 
-        val checkIcon: ImageView =
+        val checkIcon: TextView =
             itemView.findViewById(R.id.checkIcon)
 
         val container: FrameLayout =
@@ -77,21 +76,45 @@ class MediaAdapter(
             holder.container.background = null
         }
 
-        // Single click = Select / Unselect
         holder.itemView.setOnClickListener {
+
+            val maxLimit =
+                if (mediaItem.isVideo) 1 else 10
+
+            val selectedCount =
+                mediaList.count {
+                    it.isSelected &&
+                            it.isVideo == mediaItem.isVideo
+                }
+
+            if (
+                !mediaItem.isSelected &&
+                selectedCount >= maxLimit
+            ) {
+
+                Toast.makeText(
+                    holder.itemView.context,
+                    if (mediaItem.isVideo)
+                        "You can select up to 1 video at a time."
+                    else
+                        "You can select up to 10 photos at a time.",
+                    Toast.LENGTH_SHORT
+                ).show()
+
+                return@setOnClickListener
+            }
 
             mediaItem.isSelected =
                 !mediaItem.isSelected
 
             notifyItemChanged(position)
 
-            val selectedCount =
+            val totalSelected =
                 mediaList.count { it.isSelected }
 
-            onSelectionChanged(selectedCount)
+            onSelectionChanged(totalSelected)
         }
 
-        // Long click = Open Preview
         holder.itemView.setOnLongClickListener {
 
             onLongClick(mediaItem)
