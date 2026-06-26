@@ -1,40 +1,102 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#fffced">
+    android:background="#FFFCED">
+
+    <!-- Logo -->
 
     <ImageView
         android:id="@+id/logo"
-        android:layout_width="139dp"
-        android:layout_height="139dp"
+        android:layout_width="140dp"
+        android:layout_height="140dp"
         android:src="@mipmap/ic_launcher"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/appName"
+        app:layout_constraintBottom_toTopOf="@id/letterContainer"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
 
-    <TextView
-        android:id="@+id/appName"
+    <!-- FabCut Letters -->
+
+    <LinearLayout
+        android:id="@+id/letterContainer"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="FabCut"
-        android:textSize="30sp"
-        android:textStyle="bold"
-        android:textColor="#55ceff"
+        android:orientation="horizontal"
         app:layout_constraintTop_toBottomOf="@id/logo"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <TextView
+            android:id="@+id/txtF"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="F"
+            android:textSize="34sp"
+            android:textStyle="bold"
+            android:textColor="#55CEFF"/>
+
+        <TextView
+            android:id="@+id/txtA"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="a"
+            android:textSize="34sp"
+            android:textStyle="bold"
+            android:textColor="#55CEFF"/>
+
+        <TextView
+            android:id="@+id/txtB"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="b"
+            android:textSize="34sp"
+            android:textStyle="bold"
+            android:textColor="#55CEFF"/>
+
+        <TextView
+            android:id="@+id/txtC"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="C"
+            android:textSize="34sp"
+            android:textStyle="bold"
+            android:textColor="#55CEFF"/>
+
+        <TextView
+            android:id="@+id/txtU"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="u"
+            android:textSize="34sp"
+            android:textStyle="bold"
+            android:textColor="#55CEFF"/>
+
+        <TextView
+            android:id="@+id/txtT"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="t"
+            android:textSize="34sp"
+            android:textStyle="bold"
+            android:textColor="#55CEFF"/>
+
+    </LinearLayout>
+
+    <!-- Tagline -->
 
     <TextView
+        android:id="@+id/tagLine"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Edit • Create • Share"
-        android:textColor="#BDBDBD"
         android:textSize="14sp"
-        app:layout_constraintTop_toBottomOf="@id/appName"
+        android:textColor="#BDBDBD"
+        android:layout_marginTop="12dp"
+        app:layout_constraintTop_toBottomOf="@id/letterContainer"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
 
