@@ -27,6 +27,9 @@ class EditorActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // NOTE: We do NOT call enableEdgeToEdge() here. This forces the
+        // layout to stay safely below the system status bar and above the nav bar.
         setContentView(R.layout.activity_editor)
 
         selectedMediaRecyclerView = findViewById(R.id.selectedMediaRecyclerView)

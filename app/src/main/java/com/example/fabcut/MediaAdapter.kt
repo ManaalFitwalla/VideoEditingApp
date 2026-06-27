@@ -14,7 +14,7 @@ import jp.wasabeef.glide.transformations.RoundedCornersTransformation
 
 class MediaAdapter(
     private val mediaList: MutableList<MediaItem>,
-    private val maxLimit: Int, // 1. Added maxLimit here to receive the limit from GalleryActivity
+    private val maxLimit: Int,
     private val onLongClick: (MediaItem) -> Unit,
     private val onSelectionChanged: (Int) -> Unit
 ) : RecyclerView.Adapter<MediaAdapter.MediaViewHolder>() {
@@ -38,11 +38,7 @@ class MediaAdapter(
             .load(mediaItem.uri)
             .apply(
                 RequestOptions.bitmapTransform(
-                    RoundedCornersTransformation(
-                        24,
-                        0,
-                        RoundedCornersTransformation.CornerType.ALL
-                    )
+                    RoundedCornersTransformation(24, 0, RoundedCornersTransformation.CornerType.ALL)
                 )
             )
             .into(holder.imageView)
@@ -56,7 +52,6 @@ class MediaAdapter(
         }
 
         holder.itemView.setOnClickListener {
-            // 2. Modified to prioritize video tracking vs the dynamic maxLimit for photos/collages
             val currentMax = if (mediaItem.isVideo) 1 else maxLimit
 
             val selectedCount = mediaList.count {
@@ -64,17 +59,26 @@ class MediaAdapter(
             }
 
             if (!mediaItem.isSelected && selectedCount >= currentMax) {
-                Toast.makeText(
-                    holder.itemView.context,
-                    if (mediaItem.isVideo)
-                        "You can select up to 1 video at a time."
-                    else
-                        "You can select up to $maxLimit items at a time.", // 3. Displays dynamic limit count cleanly
-                    Toast.LENGTH_SHORT
-                ).show()
-                return@setOnClickListener
+                // FEATURE CHANGE: If the limit is exactly 1, automatically swap the selection instead of blocking it!
+                if (currentMax == 1) {
+                    // Find the old selected item, uncheck it, and refresh its spot on the screen
+                    val oldSelectedIndex = mediaList.indexOfFirst { it.isSelected && it.isVideo == mediaItem.isVideo }
+                    if (oldSelectedIndex != -1) {
+                        mediaList[oldSelectedIndex].isSelected = false
+                        notifyItemChanged(oldSelectedIndex)
+                    }
+                } else {
+                    // If it's collage mode (limit 6), keep the standard blocking toast message
+                    Toast.makeText(
+                        holder.itemView.context,
+                        "You can select up to $maxLimit items at a time.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    return@setOnClickListener
+                }
             }
 
+            // Toggle selection state for the item you just clicked
             mediaItem.isSelected = !mediaItem.isSelected
             notifyItemChanged(position)
 
@@ -88,7 +92,5 @@ class MediaAdapter(
         }
     }
 
-    override fun getItemCount(): Int {
-        return mediaList.size
-    }
+    override fun getItemCount(): Int = mediaList.size
 }
