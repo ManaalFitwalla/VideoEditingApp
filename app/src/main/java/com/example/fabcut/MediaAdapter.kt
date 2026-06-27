@@ -6,7 +6,7 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.TextView
-import android.widget.Toast
+
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
@@ -56,30 +56,20 @@ class MediaAdapter(
         }
 
         holder.itemView.setOnClickListener {
-            // 2. Modified to prioritize video tracking vs the dynamic maxLimit for photos/collages
-            val currentMax = if (mediaItem.isVideo) 1 else maxLimit
 
-            val selectedCount = mediaList.count {
-                it.isSelected && it.isVideo == mediaItem.isVideo
+            // Remove previous selection
+            mediaList.forEachIndexed { index, item ->
+                if (item.isSelected) {
+                    item.isSelected = false
+                    notifyItemChanged(index)
+                }
             }
 
-            if (!mediaItem.isSelected && selectedCount >= currentMax) {
-                Toast.makeText(
-                    holder.itemView.context,
-                    if (mediaItem.isVideo)
-                        "You can select up to 1 video at a time."
-                    else
-                        "You can select up to $maxLimit items at a time.", // 3. Displays dynamic limit count cleanly
-                    Toast.LENGTH_SHORT
-                ).show()
-                return@setOnClickListener
-            }
-
-            mediaItem.isSelected = !mediaItem.isSelected
+            // Select the clicked item
+            mediaItem.isSelected = true
             notifyItemChanged(position)
 
-            val totalSelected = mediaList.count { it.isSelected }
-            onSelectionChanged(totalSelected)
+            onSelectionChanged(1)
         }
 
         holder.itemView.setOnLongClickListener {
