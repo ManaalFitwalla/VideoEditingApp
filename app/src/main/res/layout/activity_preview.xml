@@ -2,20 +2,28 @@
 
 <FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/previewContainer"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#000000">
+
+    <!-- Image Preview -->
 
     <ImageView
         android:id="@+id/imagePreview"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:scaleType="fitCenter" />
+        android:visibility="visible"
+
+        android:adjustViewBounds="true"
+        android:scaleType="fitCenter"/>
+
+    <!-- Video Preview -->
 
     <VideoView
         android:id="@+id/videoPreview"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_gravity="center" />
+        android:visibility="gone"/>
 
 </FrameLayout>
