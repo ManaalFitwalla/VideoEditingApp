@@ -1,13 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="#000000">
-
-    <!-- Preview Area -->
 
     <FrameLayout
         android:layout_width="match_parent"
@@ -22,9 +19,16 @@
             android:scaleType="fitCenter"
             android:src="@android:drawable/ic_menu_gallery"/>
 
-    </FrameLayout>
+        <LinearLayout
+            android:id="@+id/collageCanvasContainer"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#FFFFFF"
+            android:orientation="horizontal"
+            android:padding="4dp"
+            android:visibility="gone"/>
 
-    <!-- Selected Photos / Videos Timeline -->
+    </FrameLayout>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/selectedMediaRecyclerView"
@@ -32,15 +36,18 @@
         android:layout_height="80dp"
         android:background="#222222"/>
 
-    <!-- Filter List -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/collageFormatsRecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="90dp"
+        android:background="#151515"
+        android:visibility="gone"/>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/filterRecyclerView"
         android:layout_width="match_parent"
         android:layout_height="90dp"
         android:background="#111111"/>
-
-    <!-- Bottom Tools -->
 
     <HorizontalScrollView
         android:layout_width="match_parent"
@@ -53,6 +60,13 @@
             android:layout_height="match_parent"
             android:gravity="center_vertical"
             android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btnLayoutFormat"
+                android:layout_width="100dp"
+                android:layout_height="55dp"
+                android:layout_margin="8dp"
+                android:text="Layout"/>
 
             <Button
                 android:id="@+id/btnFilter"
@@ -81,23 +95,6 @@
                 android:layout_height="55dp"
                 android:layout_margin="8dp"
                 android:text="Crop"/>
-
-            <Button
-                android:id="@+id/btnAdjust"
-                android:layout_width="100dp"
-                android:layout_height="55dp"
-                android:layout_margin="8dp"
-                android:text="Adjust"/>
-
-            <Button
-                android:id="@+id/btnEffects"
-                android:layout_width="100dp"
-                android:layout_height="55dp"
-                android:layout_margin="8dp"
-                android:text="Effects"/>
-
         </LinearLayout>
-
     </HorizontalScrollView>
-
 </LinearLayout>
