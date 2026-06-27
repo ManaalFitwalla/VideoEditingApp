@@ -21,6 +21,7 @@ class EditorActivity : AppCompatActivity() {
 
     private lateinit var btnFilter: Button
     private lateinit var btnText: Button
+
     private lateinit var btnSticker: Button
     private lateinit var btnCrop: Button
     private lateinit var btnAdjust: Button
