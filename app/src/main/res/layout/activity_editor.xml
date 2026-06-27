@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
@@ -6,95 +7,77 @@
     android:orientation="vertical"
     android:background="#000000">
 
-    <FrameLayout
+    <!-- Image Preview -->
+
+    <ImageView
+        android:id="@+id/imagePreview"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1">
+        android:layout_weight="1"
+        android:background="#000000"
+        android:scaleType="fitCenter" />
 
-        <ImageView
-            android:id="@+id/imagePreview"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="#000000"
-            android:scaleType="fitCenter"
-            android:src="@android:drawable/ic_menu_gallery"/>
-
-        <LinearLayout
-            android:id="@+id/collageCanvasContainer"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="#FFFFFF"
-            android:orientation="horizontal"
-            android:padding="4dp"
-            android:visibility="gone"/>
-
-    </FrameLayout>
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/selectedMediaRecyclerView"
-        android:layout_width="match_parent"
-        android:layout_height="80dp"
-        android:background="#222222"/>
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/collageFormatsRecyclerView"
-        android:layout_width="match_parent"
-        android:layout_height="90dp"
-        android:background="#151515"
-        android:visibility="gone"/>
+    <!-- Filter Bar -->
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/filterRecyclerView"
         android:layout_width="match_parent"
-        android:layout_height="90dp"
-        android:background="#111111"/>
+        android:layout_height="80dp"
+        android:background="#111111"
+        android:visibility="gone" />
+
+    <!-- Bottom Toolbar -->
 
     <HorizontalScrollView
         android:layout_width="match_parent"
-        android:layout_height="80dp"
+        android:layout_height="wrap_content"
         android:background="#1A1A1A"
+        android:fillViewport="true"
         android:scrollbars="none">
 
         <LinearLayout
             android:layout_width="wrap_content"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/btnLayoutFormat"
-                android:layout_width="100dp"
-                android:layout_height="55dp"
-                android:layout_margin="8dp"
-                android:text="Layout"/>
+            android:padding="12dp">
 
             <Button
                 android:id="@+id/btnFilter"
                 android:layout_width="100dp"
                 android:layout_height="55dp"
-                android:layout_margin="8dp"
-                android:text="Filter"/>
+                android:layout_marginEnd="8dp"
+                android:text="Filter" />
 
             <Button
                 android:id="@+id/btnText"
                 android:layout_width="100dp"
                 android:layout_height="55dp"
-                android:layout_margin="8dp"
-                android:text="Text"/>
+                android:layout_marginEnd="8dp"
+                android:text="Text" />
 
             <Button
                 android:id="@+id/btnSticker"
                 android:layout_width="100dp"
                 android:layout_height="55dp"
-                android:layout_margin="8dp"
-                android:text="Sticker"/>
+                android:layout_marginEnd="8dp"
+                android:text="Sticker" />
 
             <Button
                 android:id="@+id/btnCrop"
                 android:layout_width="100dp"
                 android:layout_height="55dp"
-                android:layout_margin="8dp"
-                android:text="Crop"/>
+                android:layout_marginEnd="8dp"
+                android:text="Crop" />
+
+            <Button
+                android:id="@+id/btnAdjust"
+                android:layout_width="100dp"
+                android:layout_height="55dp"
+                android:text="Adjust" />
+
         </LinearLayout>
+
     </HorizontalScrollView>
+
 </LinearLayout>

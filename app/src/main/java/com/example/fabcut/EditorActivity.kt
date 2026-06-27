@@ -1,109 +1,110 @@
 package com.example.fabcut
 
+import android.graphics.Bitmap
+import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
-import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
-import android.widget.LinearLayout
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.bumptech.glide.request.target.CustomTarget
+import com.bumptech.glide.request.transition.Transition
 
 class EditorActivity : AppCompatActivity() {
 
     private lateinit var imagePreview: ImageView
-    private lateinit var collageCanvasContainer: LinearLayout
     private lateinit var filterRecyclerView: RecyclerView
-    private lateinit var collageFormatsRecyclerView: RecyclerView
-    private lateinit var selectedMediaRecyclerView: RecyclerView
 
     private lateinit var btnFilter: Button
-    private lateinit var btnLayoutFormat: Button
+    private lateinit var btnText: Button
+    private lateinit var btnSticker: Button
+    private lateinit var btnCrop: Button
+    private lateinit var btnAdjust: Button
 
-    private var selectedMedia: ArrayList<String>? = null
+    private var originalBitmap: Bitmap? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_editor)
 
-        selectedMediaRecyclerView = findViewById(R.id.selectedMediaRecyclerView)
         imagePreview = findViewById(R.id.imagePreview)
-        collageCanvasContainer = findViewById(R.id.collageCanvasContainer)
         filterRecyclerView = findViewById(R.id.filterRecyclerView)
-        collageFormatsRecyclerView = findViewById(R.id.collageFormatsRecyclerView)
+
         btnFilter = findViewById(R.id.btnFilter)
-        btnLayoutFormat = findViewById(R.id.btnLayoutFormat)
+        btnText = findViewById(R.id.btnText)
+        btnSticker = findViewById(R.id.btnSticker)
+        btnCrop = findViewById(R.id.btnCrop)
+        btnAdjust = findViewById(R.id.btnAdjust)
 
-        selectedMedia = intent.getStringArrayListExtra("SELECTED_MEDIA")
+        val mediaUri = intent.getStringExtra("MEDIA_URI")
 
-        // CHECK: If more than 1 image is selected, activate automatic collage generator mode
-        if (selectedMedia != null && selectedMedia!!.size > 1) {
-            imagePreview.visibility = View.GONE
-            collageCanvasContainer.visibility = View.VISIBLE
-            btnLayoutFormat.visibility = View.VISIBLE
-
-            // Build the default grid style automatically
-            generateCollageLayout(LinearLayout.HORIZONTAL)
-        } else if (!selectedMedia.isNullOrEmpty()) {
-            imagePreview.visibility = View.VISIBLE
-            collageCanvasContainer.visibility = View.GONE
-            btnLayoutFormat.visibility = View.GONE
+        if (mediaUri != null) {
 
             Glide.with(this)
-                .load(Uri.parse(selectedMedia!![0]))
-                .into(imagePreview)
+                .asBitmap()
+                .load(Uri.parse(mediaUri))
+                .into(object : CustomTarget<Bitmap>() {
+
+                    override fun onResourceReady(
+                        resource: Bitmap,
+                        transition: Transition<in Bitmap>?
+                    ) {
+                        originalBitmap = resource
+                        imagePreview.setImageBitmap(resource)
+                    }
+
+                    override fun onLoadCleared(
+                        placeholder: Drawable?
+                    ) {
+                    }
+                })
         }
 
-        // Layout Formats Action Trigger
-        btnLayoutFormat.setOnClickListener {
-            filterRecyclerView.visibility = View.GONE
-            collageFormatsRecyclerView.visibility = View.VISIBLE
+        val filters = listOf(
+            FilterItem("Original"),
+            FilterItem("Bright"),
+            FilterItem("Cool"),
+            FilterItem("Warm"),
+            FilterItem("Vintage"),
+            FilterItem("B&W")
+        )
 
-            // Toggle formatting orientations dynamically
-            generateCollageLayout(LinearLayout.VERTICAL)
-        }
+        filterRecyclerView.layoutManager =
+            LinearLayoutManager(
+                this,
+                LinearLayoutManager.HORIZONTAL,
+                false
+            )
 
-        // Filters configuration setup
-        val filters = listOf(FilterItem("Original"), FilterItem("Bright"), FilterItem("Cool"), FilterItem("Warm"))
-        filterRecyclerView.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
-        selectedMediaRecyclerView.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        filterRecyclerView.visibility = View.GONE
 
-        selectedMediaRecyclerView.adapter = SelectedMediaAdapter(selectedMedia ?: arrayListOf()) { uri ->
-            if (imagePreview.visibility == View.VISIBLE) {
-                Glide.with(this).load(Uri.parse(uri)).into(imagePreview)
+        filterRecyclerView.adapter =
+            FilterAdapter(filters) {
+                // Add filter logic later
             }
-        }
 
         btnFilter.setOnClickListener {
-            collageFormatsRecyclerView.visibility = View.GONE
             filterRecyclerView.visibility = View.VISIBLE
-            filterRecyclerView.adapter = FilterAdapter(filters) {}
         }
-    }
 
-    // Dynamic View Grid Generator function
-    private fun generateCollageLayout(orientation: Int) {
-        collageCanvasContainer.removeAllViews()
-        collageCanvasContainer.orientation = orientation
+        btnText.setOnClickListener {
+            filterRecyclerView.visibility = View.GONE
+        }
 
-        selectedMedia?.forEach { uriString ->
-            val ivItem = ImageView(this).apply {
-                layoutParams = LinearLayout.LayoutParams(
-                    0, ViewGroup.LayoutParams.MATCH_PARENT, 1.0f
-                ).apply {
-                    if (orientation == LinearLayout.VERTICAL) {
-                        width = ViewGroup.LayoutParams.MATCH_PARENT
-                        height = 0
-                    }
-                    setMargins(4, 4, 4, 4)
-                }
-                scaleType = ImageView.ScaleType.CENTER_CROP
-            }
-            collageCanvasContainer.addView(ivItem)
-            Glide.with(this).load(Uri.parse(uriString)).into(ivItem)
+        btnSticker.setOnClickListener {
+            filterRecyclerView.visibility = View.GONE
+        }
+
+        btnCrop.setOnClickListener {
+            filterRecyclerView.visibility = View.GONE
+        }
+
+        btnAdjust.setOnClickListener {
+            filterRecyclerView.visibility = View.GONE
         }
     }
 }
