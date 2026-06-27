@@ -43,7 +43,6 @@ class EditorActivity : AppCompatActivity() {
         val mediaUri = intent.getStringExtra("MEDIA_URI")
 
         if (mediaUri != null) {
-
             Glide.with(this)
                 .asBitmap()
                 .load(Uri.parse(mediaUri))
@@ -84,13 +83,21 @@ class EditorActivity : AppCompatActivity() {
 
         filterRecyclerView.adapter =
             FilterAdapter(filters) {
-                // Add filter logic later
+                // Add filter logic here later
             }
 
+        // Toggle filter bar
         btnFilter.setOnClickListener {
-            filterRecyclerView.visibility = View.VISIBLE
+
+            if (filterRecyclerView.visibility == View.VISIBLE) {
+                filterRecyclerView.visibility = View.GONE
+            } else {
+                filterRecyclerView.visibility = View.VISIBLE
+            }
+
         }
 
+        // Hide filter bar when other tools are pressed
         btnText.setOnClickListener {
             filterRecyclerView.visibility = View.GONE
         }
