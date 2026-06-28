@@ -28,6 +28,7 @@ class SplashActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContentView(R.layout.activity_splash)
 
         checkPermission()
@@ -45,10 +46,13 @@ class SplashActivity : AppCompatActivity() {
             Manifest.permission.READ_MEDIA_VIDEO
         )
 
-        if (imagesPermission == PackageManager.PERMISSION_GRANTED &&
+        if (
+            imagesPermission == PackageManager.PERMISSION_GRANTED &&
             videosPermission == PackageManager.PERMISSION_GRANTED
         ) {
+
             openHomeActivity()
+
         } else {
 
             permissionLauncher.launch(
@@ -61,7 +65,11 @@ class SplashActivity : AppCompatActivity() {
     }
 
     private fun openHomeActivity() {
-        startActivity(Intent(this, HomeActivity::class.java))
+
+        startActivity(
+            Intent(this, HomeActivity::class.java)
+        )
+
         finish()
     }
 }
