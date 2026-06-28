@@ -1,24 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#000000">
-
-    <!-- Image Preview -->
+    android:background="#000000"
+    android:paddingTop="32dp"> <FrameLayout
+    android:layout_width="match_parent"
+    android:layout_height="0dp"
+    android:layout_weight="1">
 
     <ImageView
         android:id="@+id/imagePreview"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-
+        android:layout_height="match_parent"
         android:background="#000000"
-        android:scaleType="fitCenter" />
+        android:scaleType="centerCrop" />
 
-    <!-- Filter Bar -->
+    <LinearLayout
+        android:id="@+id/collageCanvasContainer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#FFFFFF"
+        android:orientation="horizontal"
+        android:padding="4dp"
+        android:visibility="gone"/>
+</FrameLayout>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/filterRecyclerView"
@@ -26,8 +34,6 @@
         android:layout_height="80dp"
         android:background="#111111"
         android:visibility="gone" />
-
-    <!-- Bottom Toolbar -->
 
     <HorizontalScrollView
         android:id="@+id/bottomToolbar"
@@ -82,6 +88,77 @@
 
         </LinearLayout>
 
-    </HorizontalScrollView>
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnFilter"
+            android:layout_width="95dp"
+            android:layout_height="95dp"
+            android:layout_marginEnd="12dp"
+            android:text="Filter"
+            android:textColor="#FFFFFF"
+            android:textSize="12sp"
+            android:gravity="center"
+            android:padding="6dp"
+            app:icon="@android:drawable/ic_menu_gallery"
+            app:iconGravity="top"
+            app:iconSize="32dp"
+            app:iconPadding="8dp"
+            app:iconTint="#FFFFFF"
+            app:backgroundTint="#2C2C2C"
+            app:cornerRadius="14dp" />
 
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnText"
+            android:layout_width="95dp"
+            android:layout_height="95dp"
+            android:layout_marginEnd="12dp"
+            android:text="Text"
+            android:textColor="#FFFFFF"
+            android:textSize="12sp"
+            android:gravity="center"
+            android:padding="6dp"
+            app:icon="@android:drawable/ic_menu_edit"
+            app:iconGravity="top"
+            app:iconSize="32dp"
+            app:iconPadding="8dp"
+            app:iconTint="#FFFFFF"
+            app:backgroundTint="#2C2C2C"
+            app:cornerRadius="14dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSticker"
+            android:layout_width="95dp"
+            android:layout_height="95dp"
+            android:layout_marginEnd="12dp"
+            android:text="Sticker"
+            android:textColor="#FFFFFF"
+            android:textSize="12sp"
+            android:gravity="center"
+            android:padding="6dp"
+            app:icon="@android:drawable/btn_star"
+            app:iconGravity="top"
+            app:iconSize="32dp"
+            app:iconPadding="8dp"
+            app:iconTint="#FFFFFF"
+            app:backgroundTint="#2C2C2C"
+            app:cornerRadius="14dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnCrop"
+            android:layout_width="95dp"
+            android:layout_height="95dp"
+            android:text="Crop"
+            android:textColor="#FFFFFF"
+            android:textSize="12sp"
+            android:gravity="center"
+            android:padding="6dp"
+            app:icon="@android:drawable/ic_menu_crop"
+            app:iconGravity="top"
+            app:iconSize="32dp"
+            app:iconPadding="8dp"
+            app:iconTint="#FFFFFF"
+            app:backgroundTint="#2C2C2C"
+            app:cornerRadius="14dp" />
+
+    </LinearLayout>
+    </HorizontalScrollView>
 </LinearLayout>
