@@ -35,6 +35,7 @@ class EditorActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_editor)
 
+
         val bottomToolbar = findViewById<View>(R.id.bottomToolbar)
 
         ViewCompat.setOnApplyWindowInsetsListener(bottomToolbar) { view, insets ->
