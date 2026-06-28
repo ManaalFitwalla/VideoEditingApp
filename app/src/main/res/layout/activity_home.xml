@@ -6,6 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true"
+    android:id="@+id/main"
     android:background="@drawable/app_bg"
     android:scrollbars="none">
 
