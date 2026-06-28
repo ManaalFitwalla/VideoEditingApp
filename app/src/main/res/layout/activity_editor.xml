@@ -1,40 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<LinearLayout
+<androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:background="#000000">
 
     <!-- Image Preview -->
 
     <ImageView
         android:id="@+id/imagePreview"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_weight="1"
-
         android:background="#000000"
-        android:scaleType="fitCenter" />
+        android:scaleType="fitCenter"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/filterRecyclerView"/>
 
     <!-- Filter Bar -->
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/filterRecyclerView"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="80dp"
         android:background="#111111"
-        android:visibility="gone" />
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/bottomToolbar"/>
 
     <!-- Bottom Toolbar -->
 
     <HorizontalScrollView
-        android:layout_width="match_parent"
+        android:id="@+id/bottomToolbar"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="24dp"
         android:background="#1A1A1A"
         android:fillViewport="true"
-        android:scrollbars="none">
+        android:scrollbars="none"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent">
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -48,37 +58,37 @@
                 android:layout_width="100dp"
                 android:layout_height="55dp"
                 android:layout_marginEnd="8dp"
-                android:text="Filter" />
+                android:text="Filter"/>
 
             <Button
                 android:id="@+id/btnText"
                 android:layout_width="100dp"
                 android:layout_height="55dp"
                 android:layout_marginEnd="8dp"
-                android:text="Text" />
+                android:text="Text"/>
 
             <Button
                 android:id="@+id/btnSticker"
                 android:layout_width="100dp"
                 android:layout_height="55dp"
                 android:layout_marginEnd="8dp"
-                android:text="Sticker" />
+                android:text="Sticker"/>
 
             <Button
                 android:id="@+id/btnCrop"
                 android:layout_width="100dp"
                 android:layout_height="55dp"
                 android:layout_marginEnd="8dp"
-                android:text="Crop" />
+                android:text="Crop"/>
 
             <Button
                 android:id="@+id/btnAdjust"
                 android:layout_width="100dp"
                 android:layout_height="55dp"
-                android:text="Adjust" />
+                android:text="Adjust"/>
 
         </LinearLayout>
 
     </HorizontalScrollView>
 
-</LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>
