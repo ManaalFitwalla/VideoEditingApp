@@ -36,37 +36,57 @@
         android:visibility="gone" />
 
     <HorizontalScrollView
+        android:id="@+id/bottomToolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="#1A1A1A"
         android:fillViewport="true"
-        android:scrollbars="none"
-        android:layout_marginTop="16dp" android:layout_marginBottom="0dp"> <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:paddingTop="12dp"
-        android:paddingBottom="12dp"> <com.google.android.material.button.MaterialButton
-        android:id="@+id/btnLayoutFormat"
-        android:layout_width="95dp"
-        android:layout_height="95dp"
-        android:layout_marginEnd="12dp"
-        android:text="Layout"
-        android:textColor="#FFFFFF"
-        android:textSize="12sp"
-        android:gravity="center"
-        android:padding="6dp"
-        app:icon="@android:drawable/ic_menu_sort_by_size"
-        app:iconGravity="top"
-        app:iconSize="32dp"
-        app:iconPadding="8dp"
-        app:iconTint="#FFFFFF"
-        app:backgroundTint="#2C2C2C"
-        app:cornerRadius="14dp"
-        android:visibility="gone" />
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="12dp">
+
+            <Button
+                android:id="@+id/btnFilter"
+                android:layout_width="100dp"
+                android:layout_height="55dp"
+                android:layout_marginEnd="8dp"
+
+                android:text="Filter" />
+
+            <Button
+                android:id="@+id/btnText"
+                android:layout_width="100dp"
+                android:layout_height="55dp"
+                android:layout_marginEnd="8dp"
+
+                android:text="Text" />
+
+            <Button
+                android:id="@+id/btnSticker"
+                android:layout_width="100dp"
+                android:layout_height="55dp"
+                android:layout_marginEnd="8dp"
+                android:text="Sticker" />
+
+            <Button
+                android:id="@+id/btnCrop"
+                android:layout_width="100dp"
+                android:layout_height="55dp"
+                android:layout_marginEnd="8dp"
+                android:text="Crop" />
+
+            <Button
+                android:id="@+id/btnAdjust"
+                android:layout_width="100dp"
+                android:layout_height="55dp"
+                android:text="Adjust" />
+
+        </LinearLayout>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnFilter"
