@@ -1,5 +1,7 @@
 package com.example.fabcut
-
+import androidx.activity.enableEdgeToEdge
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
 import android.net.Uri
@@ -30,8 +32,21 @@ class EditorActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         setContentView(R.layout.activity_editor)
 
+        val bottomToolbar = findViewById<View>(R.id.bottomToolbar)
+
+        ViewCompat.setOnApplyWindowInsetsListener(bottomToolbar) { view, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            view.setPadding(
+                view.paddingLeft,
+                view.paddingTop,
+                view.paddingRight,
+                systemBars.bottom
+            )
+            insets
+        }
         imagePreview = findViewById(R.id.imagePreview)
         filterRecyclerView = findViewById(R.id.filterRecyclerView)
 
