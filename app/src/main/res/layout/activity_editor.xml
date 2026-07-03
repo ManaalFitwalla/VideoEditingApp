@@ -3,25 +3,100 @@
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:id="@+id/main"
     android:background="#000000">
 
-    <!-- Image Preview -->
+    <!-- IMAGE -->
 
     <ImageView
         android:id="@+id/imagePreview"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:background="#000000"
+        android:background="#000"
         android:scaleType="fitCenter"
         app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/filterRecyclerView"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/filterRecyclerView"/>
+        app:layout_constraintEnd_toEndOf="parent"/>
 
-    <!-- Filter Bar -->
+    <!-- DRAGGABLE TEXT -->
+
+    <TextView
+        android:id="@+id/txtOverlay"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Sample Text"
+        android:textColor="#FFFFFF"
+        android:textStyle="bold"
+        android:textSize="34sp"
+        android:padding="10dp"
+        android:elevation="20dp"
+        android:background="@android:color/transparent"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="@id/imagePreview"
+        app:layout_constraintBottom_toBottomOf="@id/imagePreview"
+        app:layout_constraintStart_toStartOf="@id/imagePreview"
+        app:layout_constraintEnd_toEndOf="@id/imagePreview"/>
+
+    <!-- SNAPCHAT DELETE BIN -->
+
+    <LinearLayout
+        android:id="@+id/deleteLayout"
+        android:layout_width="90dp"
+        android:layout_height="90dp"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:visibility="gone"
+        android:background="#CC222222"
+        android:elevation="20dp"
+        android:padding="8dp"
+        app:layout_constraintBottom_toTopOf="@id/bottomToolbar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <ImageView
+            android:id="@+id/binIcon"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:src="@android:drawable/ic_menu_delete"
+            app:tint="#FF4444"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Delete"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:textSize="12sp"/>
+
+    </LinearLayout>
+
+    <!-- COLOR PALETTE -->
+
+    <HorizontalScrollView
+        android:id="@+id/colorScroll"
+        android:layout_width="0dp"
+        android:layout_height="80dp"
+        android:visibility="gone"
+        android:background="#DD222222"
+        android:padding="8dp"
+        android:scrollbars="none"
+        app:layout_constraintBottom_toTopOf="@id/filterRecyclerView"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <LinearLayout
+            android:id="@+id/colorContainer"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"/>
+
+    </HorizontalScrollView>
+
+    <!-- FILTER BAR -->
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/filterRecyclerView"
@@ -29,23 +104,23 @@
         android:layout_height="110dp"
         android:background="#111111"
         android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/bottomToolbar"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/bottomToolbar"/>
+        app:layout_constraintEnd_toEndOf="parent"/>
 
-    <!-- Bottom Toolbar -->
+    <!-- BOTTOM TOOLBAR -->
 
     <HorizontalScrollView
         android:id="@+id/bottomToolbar"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="24dp"
+        android:layout_marginBottom="20dp"
         android:background="#1A1A1A"
         android:fillViewport="true"
         android:scrollbars="none"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent">
+        app:layout_constraintEnd_toEndOf="parent">
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -53,6 +128,7 @@
             android:orientation="horizontal"
             android:gravity="center_vertical"
             android:padding="12dp">
+            <!-- FILTER -->
 
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/btnFilter"
@@ -60,8 +136,8 @@
                 android:layout_height="75dp"
                 android:layout_marginEnd="10dp"
                 app:cardCornerRadius="16dp"
-                app:cardElevation="4dp"
-                app:cardBackgroundColor="#2A2A2A">
+                app:cardBackgroundColor="#2A2A2A"
+                app:cardElevation="4dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -73,20 +149,20 @@
                         android:layout_width="28dp"
                         android:layout_height="28dp"
                         android:src="@drawable/ic_filter"
-                        android:tint="#FFFFFF"/>
+                        app:tint="#FFFFFF"/>
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="6dp"
                         android:text="Filter"
                         android:textColor="#FFFFFF"
-                        android:textStyle="bold"
-                        android:textSize="12sp"/>
+                        android:textStyle="bold"/>
 
                 </LinearLayout>
 
             </com.google.android.material.card.MaterialCardView>
+
+            <!-- TEXT -->
 
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/btnText"
@@ -94,7 +170,6 @@
                 android:layout_height="75dp"
                 android:layout_marginEnd="10dp"
                 app:cardCornerRadius="16dp"
-                app:cardElevation="4dp"
                 app:cardBackgroundColor="#2A2A2A">
 
                 <LinearLayout
@@ -107,21 +182,20 @@
                         android:layout_width="28dp"
                         android:layout_height="28dp"
                         android:src="@drawable/ic_text"
-                        android:tint="#FFFFFF"/>
+                        app:tint="#FFFFFF"/>
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="6dp"
                         android:text="Text"
                         android:textColor="#FFFFFF"
-                        android:textStyle="bold"
-                        android:textSize="12sp"/>
+                        android:textStyle="bold"/>
 
                 </LinearLayout>
 
             </com.google.android.material.card.MaterialCardView>
 
+            <!-- STICKER -->
 
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/btnSticker"
@@ -129,7 +203,6 @@
                 android:layout_height="75dp"
                 android:layout_marginEnd="10dp"
                 app:cardCornerRadius="16dp"
-                app:cardElevation="4dp"
                 app:cardBackgroundColor="#2A2A2A">
 
                 <LinearLayout
@@ -142,21 +215,20 @@
                         android:layout_width="28dp"
                         android:layout_height="28dp"
                         android:src="@drawable/ic_sticker"
-                        android:tint="#FFFFFF"/>
+                        app:tint="#FFFFFF"/>
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="6dp"
                         android:text="Sticker"
                         android:textColor="#FFFFFF"
-                        android:textStyle="bold"
-                        android:textSize="12sp"/>
+                        android:textStyle="bold"/>
 
                 </LinearLayout>
 
             </com.google.android.material.card.MaterialCardView>
 
+            <!-- CROP -->
 
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/btnCrop"
@@ -164,7 +236,6 @@
                 android:layout_height="75dp"
                 android:layout_marginEnd="10dp"
                 app:cardCornerRadius="16dp"
-                app:cardElevation="4dp"
                 app:cardBackgroundColor="#2A2A2A">
 
                 <LinearLayout
@@ -177,29 +248,26 @@
                         android:layout_width="28dp"
                         android:layout_height="28dp"
                         android:src="@drawable/ic_crop"
-                        android:tint="#FFFFFF"/>
+                        app:tint="#FFFFFF"/>
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="6dp"
                         android:text="Crop"
                         android:textColor="#FFFFFF"
-                        android:textStyle="bold"
-                        android:textSize="12sp"/>
+                        android:textStyle="bold"/>
 
                 </LinearLayout>
 
             </com.google.android.material.card.MaterialCardView>
 
+            <!-- ADJUST -->
 
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/btnAdjust"
                 android:layout_width="85dp"
                 android:layout_height="75dp"
-                android:layout_marginEnd="10dp"
                 app:cardCornerRadius="16dp"
-                app:cardElevation="4dp"
                 app:cardBackgroundColor="#2A2A2A">
 
                 <LinearLayout
@@ -212,21 +280,18 @@
                         android:layout_width="28dp"
                         android:layout_height="28dp"
                         android:src="@drawable/ic_adjust"
-                        android:tint="#FFFFFF"/>
+                        app:tint="#FFFFFF"/>
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="6dp"
                         android:text="Adjust"
                         android:textColor="#FFFFFF"
-                        android:textStyle="bold"
-                        android:textSize="12sp"/>
+                        android:textStyle="bold"/>
 
                 </LinearLayout>
 
             </com.google.android.material.card.MaterialCardView>
-
 
         </LinearLayout>
 
