@@ -1,20 +1,24 @@
 package com.example.fabcut
-
+import android.widget.ImageView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import android.graphics.Bitmap
 
 class FilterAdapter(
     private val filterList: List<FilterItem>,
     private val onFilterClick: (FilterItem) -> Unit
-) : RecyclerView.Adapter<FilterAdapter.FilterViewHolder>() {
+): RecyclerView.Adapter<FilterAdapter.FilterViewHolder>(){
 
     private var selectedPosition = 0
 
     class FilterViewHolder(itemView: View) :
         RecyclerView.ViewHolder(itemView) {
+
+        val imgFilterPreview: ImageView =
+            itemView.findViewById(R.id.imgFilterPreview)
 
         val txtFilter: TextView =
             itemView.findViewById(R.id.txtFilter)
@@ -43,7 +47,7 @@ class FilterAdapter(
         val filter = filterList[position]
 
         holder.txtFilter.text = filter.name
-
+        holder.imgFilterPreview.setImageBitmap(filter.preview)
         if (position == selectedPosition) {
 
             holder.txtFilter.setBackgroundResource(
