@@ -1,7 +1,5 @@
 package com.example.fabcut
-import androidx.activity.enableEdgeToEdge
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
+
 import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
 import android.net.Uri
@@ -9,24 +7,27 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Button
 import android.widget.ImageView
+import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
-
+import com.google.android.material.card.MaterialCardView
 class EditorActivity : AppCompatActivity() {
 
     private lateinit var imagePreview: ImageView
     private lateinit var filterRecyclerView: RecyclerView
 
-    private lateinit var btnFilter: Button
-    private lateinit var btnText: Button
+    private lateinit var btnFilter: MaterialCardView
+    private lateinit var btnText: MaterialCardView
 
-    private lateinit var btnSticker: Button
-    private lateinit var btnCrop: Button
-    private lateinit var btnAdjust: Button
+    private lateinit var btnSticker: MaterialCardView
+    private lateinit var btnCrop: MaterialCardView
+    private lateinit var btnAdjust: MaterialCardView
 
     private var originalBitmap: Bitmap? = null
 
@@ -35,19 +36,12 @@ class EditorActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_editor)
 
-
-        val bottomToolbar = findViewById<View>(R.id.bottomToolbar)
-
-        ViewCompat.setOnApplyWindowInsetsListener(bottomToolbar) { view, insets ->
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            view.setPadding(
-                view.paddingLeft,
-                view.paddingTop,
-                view.paddingRight,
-                systemBars.bottom
-            )
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
+
         imagePreview = findViewById(R.id.imagePreview)
         filterRecyclerView = findViewById(R.id.filterRecyclerView)
 
@@ -70,7 +64,58 @@ class EditorActivity : AppCompatActivity() {
                         transition: Transition<in Bitmap>?
                     ) {
                         originalBitmap = resource
+
+                        val thumbnail = Bitmap.createScaledBitmap(
+                            resource,
+                            150,
+                            150,
+                            true
+                        )
+
                         imagePreview.setImageBitmap(resource)
+                        val filters = listOf(
+                            FilterItem("Original", thumbnail),
+                            FilterItem("Bright", ImageFilters.bright(thumbnail)),
+                            FilterItem("Cool", ImageFilters.cool(thumbnail)),
+                            FilterItem("Warm", ImageFilters.warm(thumbnail)),
+                            FilterItem("Vintage", ImageFilters.vintage(thumbnail)),
+                            FilterItem("B&W", ImageFilters.blackAndWhite(thumbnail))
+                        )
+                        filterRecyclerView.adapter =
+                            FilterAdapter(filters) { selectedFilter ->
+
+                                when (selectedFilter.name) {
+
+                                    "Original" ->
+                                        imagePreview.setImageBitmap(resource)
+                                    "Bright" ->
+                                        imagePreview.setImageBitmap(
+                                            ImageFilters.bright(resource)
+                                        )
+                                    "Warm" ->
+                                        imagePreview.setImageBitmap(
+                                            ImageFilters.warm(resource)
+                                        )
+                                    "Cool" ->
+                                        imagePreview.setImageBitmap(
+                                            ImageFilters.cool(resource)
+                                        )
+                                    "Vintage" ->
+                                        imagePreview.setImageBitmap(
+                                            ImageFilters.vintage(resource)
+                                        )
+
+                                    "B&W" ->
+                                        imagePreview.setImageBitmap(
+                                            ImageFilters.blackAndWhite(resource)
+                                        )
+
+                                    else ->
+                                        imagePreview.setImageBitmap(resource)
+                                }
+
+                            }
+
                     }
 
                     override fun onLoadCleared(
@@ -80,14 +125,7 @@ class EditorActivity : AppCompatActivity() {
                 })
         }
 
-        val filters = listOf(
-            FilterItem("Original"),
-            FilterItem("Bright"),
-            FilterItem("Cool"),
-            FilterItem("Warm"),
-            FilterItem("Vintage"),
-            FilterItem("B&W")
-        )
+
 
         filterRecyclerView.layoutManager =
             LinearLayoutManager(
@@ -98,10 +136,7 @@ class EditorActivity : AppCompatActivity() {
 
         filterRecyclerView.visibility = View.GONE
 
-        filterRecyclerView.adapter =
-            FilterAdapter(filters) {
-                // Add filter logic here later
-            }
+
 
         // Toggle filter bar
         btnFilter.setOnClickListener {
