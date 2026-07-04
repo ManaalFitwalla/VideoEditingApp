@@ -1,47 +1,51 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+
+<androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="#000000"
-    android:paddingTop="32dp"> <FrameLayout
-    android:layout_width="match_parent"
-    android:layout_height="0dp"
-    android:layout_weight="1">
+    android:id="@+id/main"
+    android:background="#000000">
+
+    <!-- Image Preview -->
 
     <ImageView
         android:id="@+id/imagePreview"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         android:background="#000000"
-        android:scaleType="centerCrop" />
+        android:scaleType="fitCenter"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/filterRecyclerView"/>
 
-    <LinearLayout
-        android:id="@+id/collageCanvasContainer"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="#FFFFFF"
-        android:orientation="horizontal"
-        android:padding="4dp"
-        android:visibility="gone"/>
-</FrameLayout>
+    <!-- Filter Bar -->
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/filterRecyclerView"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="80dp"
         android:background="#111111"
-        android:visibility="gone" />
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/bottomToolbar"/>
+
+    <!-- Bottom Toolbar -->
 
     <HorizontalScrollView
         android:id="@+id/bottomToolbar"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="24dp"
         android:background="#1A1A1A"
         android:fillViewport="true"
-        android:scrollbars="none">
+        android:scrollbars="none"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent">
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -55,110 +59,37 @@
                 android:layout_width="100dp"
                 android:layout_height="55dp"
                 android:layout_marginEnd="8dp"
-
-                android:text="Filter" />
+                android:text="Filter"/>
 
             <Button
                 android:id="@+id/btnText"
                 android:layout_width="100dp"
                 android:layout_height="55dp"
                 android:layout_marginEnd="8dp"
-
-                android:text="Text" />
+                android:text="Text"/>
 
             <Button
                 android:id="@+id/btnSticker"
                 android:layout_width="100dp"
                 android:layout_height="55dp"
                 android:layout_marginEnd="8dp"
-                android:text="Sticker" />
+                android:text="Sticker"/>
 
             <Button
                 android:id="@+id/btnCrop"
                 android:layout_width="100dp"
                 android:layout_height="55dp"
                 android:layout_marginEnd="8dp"
-                android:text="Crop" />
+                android:text="Crop"/>
 
             <Button
                 android:id="@+id/btnAdjust"
                 android:layout_width="100dp"
                 android:layout_height="55dp"
-                android:text="Adjust" />
+                android:text="Adjust"/>
 
         </LinearLayout>
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnFilter"
-            android:layout_width="95dp"
-            android:layout_height="95dp"
-            android:layout_marginEnd="12dp"
-            android:text="Filter"
-            android:textColor="#FFFFFF"
-            android:textSize="12sp"
-            android:gravity="center"
-            android:padding="6dp"
-            app:icon="@android:drawable/ic_menu_gallery"
-            app:iconGravity="top"
-            app:iconSize="32dp"
-            app:iconPadding="8dp"
-            app:iconTint="#FFFFFF"
-            app:backgroundTint="#2C2C2C"
-            app:cornerRadius="14dp" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnText"
-            android:layout_width="95dp"
-            android:layout_height="95dp"
-            android:layout_marginEnd="12dp"
-            android:text="Text"
-            android:textColor="#FFFFFF"
-            android:textSize="12sp"
-            android:gravity="center"
-            android:padding="6dp"
-            app:icon="@android:drawable/ic_menu_edit"
-            app:iconGravity="top"
-            app:iconSize="32dp"
-            app:iconPadding="8dp"
-            app:iconTint="#FFFFFF"
-            app:backgroundTint="#2C2C2C"
-            app:cornerRadius="14dp" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnSticker"
-            android:layout_width="95dp"
-            android:layout_height="95dp"
-            android:layout_marginEnd="12dp"
-            android:text="Sticker"
-            android:textColor="#FFFFFF"
-            android:textSize="12sp"
-            android:gravity="center"
-            android:padding="6dp"
-            app:icon="@android:drawable/btn_star"
-            app:iconGravity="top"
-            app:iconSize="32dp"
-            app:iconPadding="8dp"
-            app:iconTint="#FFFFFF"
-            app:backgroundTint="#2C2C2C"
-            app:cornerRadius="14dp" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnCrop"
-            android:layout_width="95dp"
-            android:layout_height="95dp"
-            android:text="Crop"
-            android:textColor="#FFFFFF"
-            android:textSize="12sp"
-            android:gravity="center"
-            android:padding="6dp"
-            app:icon="@android:drawable/ic_menu_crop"
-            app:iconGravity="top"
-            app:iconSize="32dp"
-            app:iconPadding="8dp"
-            app:iconTint="#FFFFFF"
-            app:backgroundTint="#2C2C2C"
-            app:cornerRadius="14dp" />
-
-    </LinearLayout>
     </HorizontalScrollView>
-</LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

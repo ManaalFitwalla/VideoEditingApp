@@ -13,7 +13,7 @@ android {
     defaultConfig {
         applicationId = "com.example.fabcut"
         minSdk = 29
-        targetSdk = 34
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0"
 
