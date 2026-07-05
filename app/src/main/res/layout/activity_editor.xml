@@ -21,15 +21,17 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
 
+
     <VideoView
         android:id="@+id/videoPreview"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:visibility="gone"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/bottomToolbar"
+        app:layout_constraintBottom_toTopOf="@id/filterRecyclerView"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
+
 
     <!-- DRAGGABLE TEXT -->
 
@@ -110,7 +112,6 @@
             android:id="@+id/btnColor"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:layout_marginEnd="25dp"
             android:src="@drawable/ic_palette"
             app:tint="#FFFFFF"/>
 
@@ -126,6 +127,7 @@
             android:id="@+id/btnUnderline"
             android:layout_width="40dp"
             android:layout_height="40dp"
+            android:layout_marginEnd="25dp"
             android:src="@drawable/ic_underline"
             app:tint="#FFFFFF"/>
 
@@ -136,12 +138,10 @@
     <HorizontalScrollView
         android:id="@+id/colorScroll"
         android:layout_width="0dp"
-        android:layout_height="80dp"
+        android:layout_height="70dp"
         android:visibility="gone"
-        android:background="#DD222222"
-        android:padding="8dp"
-        android:scrollbars="none"
-        app:layout_constraintBottom_toTopOf="@id/filterRecyclerView"
+        android:background="#333333"
+        app:layout_constraintBottom_toTopOf="@id/bottomToolbar"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
