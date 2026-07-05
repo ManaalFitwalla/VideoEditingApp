@@ -136,8 +136,8 @@ class EditorActivity : AppCompatActivity() {
                             150,
                             true
                         )
-
                         val filters = listOf(
+
                             FilterItem("Original", thumb),
                             FilterItem("Bright", ImageFilters.bright(thumb)),
                             FilterItem("Cool", ImageFilters.cool(thumb)),
