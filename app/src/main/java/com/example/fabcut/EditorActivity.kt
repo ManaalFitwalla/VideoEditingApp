@@ -26,6 +26,7 @@ import com.google.android.material.card.MaterialCardView
 import kotlin.math.pow
 import kotlin.math.sqrt
 import android.widget.VideoView
+
 import android.media.MediaPlayer
 
 class EditorActivity : AppCompatActivity() {
@@ -43,6 +44,14 @@ class EditorActivity : AppCompatActivity() {
 
     private lateinit var imagePreview: ImageView
     private lateinit var txtOverlay: TextView
+    private lateinit var videoPreview: VideoView
+
+    private lateinit var textToolbar: LinearLayout
+
+    private lateinit var btnBold: ImageView
+    private lateinit var btnItalic: ImageView
+    private lateinit var btnUnderline: ImageView
+    private lateinit var btnColor: ImageView
 
     private lateinit var deleteLayout: LinearLayout
     private lateinit var colorScroll: HorizontalScrollView
@@ -55,7 +64,6 @@ class EditorActivity : AppCompatActivity() {
     private lateinit var btnSticker: MaterialCardView
     private lateinit var btnCrop: MaterialCardView
     private lateinit var btnAdjust: MaterialCardView
-    private lateinit var videoPreview: VideoView
 
     private var originalBitmap: Bitmap? = null
 
