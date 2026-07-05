@@ -31,8 +31,6 @@
     import java.io.File
     import com.yalantis.ucrop.UCrop
     import android.widget.VideoView
-    private lateinit var videoPreview: VideoView
-
     
     class EditorActivity : AppCompatActivity() {
 
@@ -51,6 +49,12 @@
         private lateinit var btnSticker: MaterialCardView
         private lateinit var btnCrop: MaterialCardView
         private lateinit var btnAdjust: MaterialCardView
+        private lateinit var textToolbar: LinearLayout
+
+        private lateinit var btnColor: ImageView
+        private lateinit var btnBold: ImageView
+        private lateinit var btnItalic: ImageView
+        private lateinit var btnUnderline: ImageView
     
         private var originalBitmap: Bitmap? = null
     
@@ -63,14 +67,15 @@
             registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
 
                 if (result.resultCode == RESULT_OK) {
-                    val uri = result.data?.getStringExtra("CROPPED_URI")
 
-                    if (uri != null) {
-                        imagePreview.setImageURI(Uri.parse(uri))
+                    val resultUri = UCrop.getOutput(result.data!!)
+
+                    if (resultUri != null) {
+                        imagePreview.setImageURI(resultUri)
                     }
                 }
             }
-    
+
         private val colors = arrayOf(
             Color.WHITE,
             Color.BLACK,
@@ -114,6 +119,12 @@
             btnSticker = findViewById(R.id.btnSticker)
             btnCrop = findViewById(R.id.btnCrop)
             btnAdjust = findViewById(R.id.btnAdjust)
+            textToolbar = findViewById(R.id.textToolbar)
+
+            btnColor = findViewById(R.id.btnColor)
+            btnBold = findViewById(R.id.btnBold)
+            btnItalic = findViewById(R.id.btnItalic)
+            btnUnderline = findViewById(R.id.btnUnderline)
     
             filterRecyclerView.layoutManager =
                 LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
@@ -190,6 +201,122 @@
                         View.VISIBLE
             }
 
+            btnText.setOnClickListener {
+
+                filterRecyclerView.visibility = View.GONE
+
+                val editText = EditText(this)
+                editText.hint = "Type something..."
+
+                AlertDialog.Builder(this)
+                    .setTitle("Add Text")
+                    .setView(editText)
+                    .setPositiveButton("Add") { _, _ ->
+
+                        val text = editText.text.toString().trim()
+
+                        if (text.isNotEmpty()) {
+
+                            txtOverlay.text = text
+                            txtOverlay.visibility = View.VISIBLE
+
+                            textToolbar.visibility = View.VISIBLE
+
+                            txtOverlay.post {
+
+                                txtOverlay.x =
+                                    imagePreview.x +
+                                            imagePreview.width / 2f -
+                                            txtOverlay.width / 2f
+
+                                txtOverlay.y =
+                                    imagePreview.y +
+                                            imagePreview.height / 2f -
+                                            txtOverlay.height / 2f
+                            }
+                        }
+                    }
+                    .setNegativeButton("Cancel", null)
+                    .show()
+            }
+
+            btnColor.setOnClickListener {
+
+                colorScroll.visibility =
+                    if (colorScroll.visibility == View.VISIBLE)
+                        View.GONE
+                    else
+                        View.VISIBLE
+            }
+
+            colorContainer.removeAllViews()
+
+            for (color in colors) {
+
+                val colorView = View(this)
+
+                val params = LinearLayout.LayoutParams(100,100)
+                params.setMargins(16,16,16,16)
+
+                colorView.layoutParams = params
+                colorView.setBackgroundColor(color)
+
+                colorView.setOnClickListener {
+
+                    txtOverlay.setTextColor(color)
+
+                }
+
+                colorContainer.addView(colorView)
+            }
+
+            var isBold = false
+
+            btnBold.setOnClickListener {
+
+                isBold = !isBold
+
+                if (isBold)
+                    txtOverlay.setTypeface(null, android.graphics.Typeface.BOLD)
+                else
+                    txtOverlay.setTypeface(null, android.graphics.Typeface.NORMAL)
+
+            }
+            var isItalic = false
+
+            btnItalic.setOnClickListener {
+
+                isItalic = !isItalic
+
+                if (isItalic)
+                    txtOverlay.setTypeface(null, android.graphics.Typeface.ITALIC)
+                else
+                    txtOverlay.setTypeface(null, android.graphics.Typeface.NORMAL)
+
+            }
+
+            var isUnderline = false
+
+            btnUnderline.setOnClickListener {
+
+                isUnderline = !isUnderline
+
+                if (isUnderline) {
+
+                    txtOverlay.paintFlags =
+                        txtOverlay.paintFlags or
+                                android.graphics.Paint.UNDERLINE_TEXT_FLAG
+
+                } else {
+
+                    txtOverlay.paintFlags =
+                        txtOverlay.paintFlags and
+                                android.graphics.Paint.UNDERLINE_TEXT_FLAG.inv()
+
+                }
+            }
+
+
             btnCrop.setOnClickListener {
 
                 if (mediaUri == null) return@setOnClickListener
@@ -199,16 +326,13 @@
 
                 val options = UCrop.Options().apply {
                     setFreeStyleCropEnabled(true)
-                    setHideBottomControls(false)
-                    setToolbarTitle("Crop")
-                    setToolbarColor(Color.BLACK)
-                    setToolbarWidgetColor(Color.WHITE)
-                    setActiveControlsWidgetColor(Color.parseColor("#BB86FC"))
                 }
 
-                UCrop.of(sourceUri, destinationUri)
+                val intent = UCrop.of(sourceUri, destinationUri)
                     .withOptions(options)
-                    .start(this)
+                    .getIntent(this)
+
+                cropLauncher.launch(intent)
             }
             txtOverlay.setOnLongClickListener {
     
@@ -235,9 +359,15 @@
     
                         dX = view.x - event.rawX
                         dY = view.y - event.rawY
-    
+
+                        view.performClick()
+
                         deleteLayout.visibility = View.VISIBLE
-                        deleteLayout.alpha = 1f
+
+                        deleteLayout.animate()
+                            .alpha(1f)
+                            .setDuration(200)
+                            .start()
                     }
     
                     MotionEvent.ACTION_MOVE -> {
@@ -355,17 +485,4 @@
             }
     
         } // End of onCreate()
-        @Deprecated("Deprecated in Java")
-        override fun onActivityResult(
-            requestCode: Int,
-            resultCode: Int,
-            data: Intent?
-        ) {
-            super.onActivityResult(requestCode, resultCode, data)
-
-            if (requestCode == UCrop.REQUEST_CROP && resultCode == RESULT_OK) {
-                val resultUri = UCrop.getOutput(data!!)
-                imagePreview.setImageURI(resultUri)
-            }
-        }
     } // End of EditorActivity

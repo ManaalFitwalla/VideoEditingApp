@@ -85,17 +85,63 @@
 
     </LinearLayout>
 
+    <!-- TEXT TOOLBAR -->
+
+    <LinearLayout
+        android:id="@+id/textToolbar"
+        android:layout_width="0dp"
+        android:layout_height="60dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="15dp"
+        android:visibility="gone"
+        android:background="#222222"
+        app:layout_constraintBottom_toTopOf="@id/colorScroll"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <ImageView
+            android:id="@+id/btnBold"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginEnd="25dp"
+            android:src="@drawable/ic_bold"
+            app:tint="#FFFFFF"/>
+
+        <ImageView
+            android:id="@+id/btnColor"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:src="@drawable/ic_palette"
+            app:tint="#FFFFFF"/>
+
+        <ImageView
+            android:id="@+id/btnItalic"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginEnd="25dp"
+            android:src="@drawable/ic_italic"
+            app:tint="#FFFFFF"/>
+
+        <ImageView
+            android:id="@+id/btnUnderline"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginEnd="25dp"
+            android:src="@drawable/ic_underline"
+            app:tint="#FFFFFF"/>
+
+    </LinearLayout>
+
     <!-- COLOR PALETTE -->
 
     <HorizontalScrollView
         android:id="@+id/colorScroll"
         android:layout_width="0dp"
-        android:layout_height="80dp"
+        android:layout_height="70dp"
         android:visibility="gone"
-        android:background="#DD222222"
-        android:padding="8dp"
-        android:scrollbars="none"
-        app:layout_constraintBottom_toTopOf="@id/filterRecyclerView"
+        android:background="#333333"
+        app:layout_constraintBottom_toTopOf="@id/bottomToolbar"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
