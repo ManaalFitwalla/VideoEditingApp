@@ -1,5 +1,4 @@
 package com.example.fabcut
-
 import android.app.AlertDialog
 import android.graphics.Bitmap
 import android.graphics.Color
