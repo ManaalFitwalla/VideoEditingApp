@@ -26,8 +26,21 @@ import com.bumptech.glide.request.transition.Transition
 import com.google.android.material.card.MaterialCardView
 import kotlin.math.pow
 import kotlin.math.sqrt
+import android.widget.VideoView
+import android.media.MediaPlayer
 
 class EditorActivity : AppCompatActivity() {
+
+    private val colors = arrayOf(
+        Color.WHITE,
+        Color.BLACK,
+        Color.RED,
+        Color.GREEN,
+        Color.BLUE,
+        Color.YELLOW,
+        Color.CYAN,
+        Color.MAGENTA
+    )
 
     private lateinit var imagePreview: ImageView
     private lateinit var txtOverlay: TextView
@@ -43,6 +56,7 @@ class EditorActivity : AppCompatActivity() {
     private lateinit var btnSticker: MaterialCardView
     private lateinit var btnCrop: MaterialCardView
     private lateinit var btnAdjust: MaterialCardView
+    private lateinit var videoPreview: VideoView
 
     private var originalBitmap: Bitmap? = null
 
@@ -52,18 +66,6 @@ class EditorActivity : AppCompatActivity() {
 
     private lateinit var scaleDetector: ScaleGestureDetector
 
-    private val colors = arrayOf(
-        Color.WHITE,
-        Color.BLACK,
-        Color.RED,
-        Color.GREEN,
-        Color.BLUE,
-        Color.YELLOW,
-        Color.CYAN,
-        Color.MAGENTA,
-        Color.parseColor("#FF9800"),
-        Color.parseColor("#9C27B0")
-    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -90,6 +92,7 @@ class EditorActivity : AppCompatActivity() {
         btnSticker = findViewById(R.id.btnSticker)
         btnCrop = findViewById(R.id.btnCrop)
         btnAdjust = findViewById(R.id.btnAdjust)
+
 
         filterRecyclerView.layoutManager =
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
@@ -200,40 +203,7 @@ class EditorActivity : AppCompatActivity() {
 
         btnText.setOnClickListener {
 
-            filterRecyclerView.visibility = View.GONE
 
-            val editText = EditText(this)
-            editText.hint = "Type something..."
-
-            AlertDialog.Builder(this)
-                .setTitle("Add Text")
-                .setView(editText)
-                .setPositiveButton("Add") { _, _ ->
-
-                    val text = editText.text.toString().trim()
-
-                    if (text.isNotEmpty()) {
-
-                        txtOverlay.text = text
-                        txtOverlay.visibility = View.VISIBLE
-
-                        txtOverlay.post {
-
-                            txtOverlay.x =
-                                imagePreview.x +
-                                        imagePreview.width / 2f -
-                                        txtOverlay.width / 2f
-
-                            txtOverlay.y =
-                                imagePreview.y +
-                                        imagePreview.height / 2f -
-                                        txtOverlay.height / 2f
-                        }
-                    }
-                }
-                .setNegativeButton("Cancel", null)
-                .show()
-        }
         // ==========================
         // FILTER BUTTON
         // ==========================
@@ -250,44 +220,40 @@ class EditorActivity : AppCompatActivity() {
         // ==========================
         // ADD TEXT
         // ==========================
+        filterRecyclerView.visibility = View.GONE
 
-        btnText.setOnClickListener {
+        val editText = EditText(this)
+        editText.hint = "Type something..."
 
-            filterRecyclerView.visibility = View.GONE
+        AlertDialog.Builder(this)
+            .setTitle("Add Text")
+            .setView(editText)
+            .setPositiveButton("Add") { _, _ ->
 
-            val editText = EditText(this)
-            editText.hint = "Type something..."
+                val text = editText.text.toString().trim()
 
-            AlertDialog.Builder(this)
-                .setTitle("Add Text")
-                .setView(editText)
-                .setPositiveButton("Add") { _, _ ->
+                if (text.isNotEmpty()) {
 
-                    val text = editText.text.toString().trim()
+                    txtOverlay.text = text
+                    txtOverlay.visibility = View.VISIBLE
 
-                    if (text.isNotEmpty()) {
+                    txtOverlay.post {
 
-                        txtOverlay.text = text
-                        txtOverlay.visibility = View.VISIBLE
+                        txtOverlay.x =
+                            imagePreview.x +
+                                    imagePreview.width / 2f -
+                                    txtOverlay.width / 2f
 
-                        txtOverlay.post {
-
-                            txtOverlay.x =
-                                imagePreview.x +
-                                        imagePreview.width / 2f -
-                                        txtOverlay.width / 2f
-
-                            txtOverlay.y =
-                                imagePreview.y +
-                                        imagePreview.height / 2f -
-                                        txtOverlay.height / 2f
-                        }
+                        txtOverlay.y =
+                            imagePreview.y +
+                                    imagePreview.height / 2f -
+                                    txtOverlay.height / 2f
                     }
                 }
-                .setNegativeButton("Cancel", null)
-                .show()
-        }
-
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
         // ==========================
         // DRAG + PINCH TO RESIZE
         // ==========================
@@ -299,6 +265,8 @@ class EditorActivity : AppCompatActivity() {
             when (event.actionMasked) {
 
                 MotionEvent.ACTION_DOWN -> {
+
+                    view.performClick()
 
                     dX = view.x - event.rawX
                     dY = view.y - event.rawY
@@ -340,6 +308,7 @@ class EditorActivity : AppCompatActivity() {
                         deleteLayout.alpha = 0.8f
                     }
                 }
+
                 MotionEvent.ACTION_UP -> {
 
                     val centerX = view.x + view.width / 2
@@ -369,44 +338,41 @@ class EditorActivity : AppCompatActivity() {
                 }
             }
 
-            true
+            false
         }
 
         // ==========================
         // DOUBLE TAP TO EDIT
         // ==========================
 
-        txtOverlay.setOnClickListener {
+        txtOverlay.setOnLongClickListener {
 
-            val currentTime = System.currentTimeMillis()
+            val editText = EditText(this)
+            editText.setText(txtOverlay.text)
+            editText.setSelection(editText.text.length)
 
-            if (currentTime - lastClickTime < 300) {
+            AlertDialog.Builder(this)
+                .setTitle("Edit Text")
+                .setView(editText)
+                .setPositiveButton("Save") { _, _ ->
 
-                val editText = EditText(this)
-                editText.setText(txtOverlay.text)
-                editText.setSelection(editText.text.length)
+                    val newText = editText.text.toString().trim()
 
-                AlertDialog.Builder(this)
-                    .setTitle("Edit Text")
-                    .setView(editText)
-                    .setPositiveButton("Save") { _, _ ->
-
-                        val newText = editText.text.toString().trim()
-
-                        if (newText.isNotEmpty()) {
-                            txtOverlay.text = newText
-                        }
+                    if (newText.isNotEmpty()) {
+                        txtOverlay.text = newText
                     }
-                    .setNegativeButton("Cancel", null)
-                    .show()
-            }
+                }
+                .setNegativeButton("Cancel", null)
+                .show()
 
-            lastClickTime = currentTime
+            true
         }
 
         // ==========================
         // COLOR PALETTE
         // ==========================
+
+        colorContainer.removeAllViews()
 
         colorContainer.removeAllViews()
 
@@ -430,12 +396,15 @@ class EditorActivity : AppCompatActivity() {
 
         txtOverlay.setOnLongClickListener {
 
-            colorScroll.visibility =
-                if (colorScroll.visibility == View.VISIBLE)
-                    View.GONE
-                else
-                    View.VISIBLE
+            android.widget.Toast.makeText(
+                this,
+                "Long Press Working",
+                android.widget.Toast.LENGTH_SHORT
+            ).show()
 
+            colorScroll.visibility = View.VISIBLE
+            colorScroll.bringToFront()
+            colorScroll.requestLayout()
             true
         }
         // ==========================
@@ -461,12 +430,7 @@ class EditorActivity : AppCompatActivity() {
         txtOverlay.apply {
             textSize = 34f
             setTextColor(Color.WHITE)
-            setShadowLayer(
-                10f,
-                3f,
-                3f,
-                Color.BLACK
-            )
+            setShadowLayer(10f,3f,3f,Color.BLACK)
             visibility = View.GONE
         }
     }
