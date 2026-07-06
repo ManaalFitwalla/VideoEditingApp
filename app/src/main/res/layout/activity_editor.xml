@@ -17,9 +17,27 @@
         android:background="#000"
         android:scaleType="fitCenter"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/bottomToolbar"
+        app:layout_constraintBottom_toTopOf="@id/filterRecyclerView"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
+
+
+    <androidx.media3.ui.PlayerView
+        android:id="@+id/videoPreview"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone"
+        android:background="#000"
+
+
+        app:use_controller="false"
+        app:resize_mode="fit"
+
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/filterRecyclerView"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
 
     <!-- DRAGGABLE TEXT -->
 
@@ -73,7 +91,7 @@
 
     </LinearLayout>
 
-    <!-- COLOR PALETTE -->
+    <!-- TEXT TOOLBAR -->
 
     <LinearLayout
         android:id="@+id/textToolbar"
@@ -92,8 +110,8 @@
             android:id="@+id/btnBold"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:src="@drawable/ic_bold"
             android:layout_marginEnd="25dp"
+            android:src="@drawable/ic_bold"
             app:tint="#FFFFFF"/>
 
         <ImageView
@@ -102,6 +120,7 @@
             android:layout_height="40dp"
             android:src="@drawable/ic_palette"
             app:tint="#FFFFFF"/>
+
         <ImageView
             android:id="@+id/btnItalic"
             android:layout_width="40dp"
@@ -119,6 +138,9 @@
             app:tint="#FFFFFF"/>
 
     </LinearLayout>
+
+    <!-- COLOR PALETTE -->
+
     <HorizontalScrollView
         android:id="@+id/colorScroll"
         android:layout_width="0dp"
@@ -334,9 +356,38 @@
                 </LinearLayout>
 
             </com.google.android.material.card.MaterialCardView>
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/btnBrightness"
+                android:layout_width="85dp"
+                android:layout_height="75dp"
+                android:layout_marginEnd="10dp"
+                app:cardCornerRadius="16dp"
+                app:cardBackgroundColor="#2A2A2A">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:orientation="vertical">
+
+                    <ImageView
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
+                        android:src="@drawable/ic_adjust"
+                        app:tint="#FFFFFF"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Brightness"
+                        android:textColor="#FFFFFF"
+                        android:textStyle="bold"/>
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
 
         </LinearLayout>
-
 
     </HorizontalScrollView>
 
