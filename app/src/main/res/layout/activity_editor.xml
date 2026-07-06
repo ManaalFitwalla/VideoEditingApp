@@ -17,21 +17,9 @@
         android:background="#000"
         android:scaleType="fitCenter"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/filterRecyclerView"
+        app:layout_constraintBottom_toTopOf="@id/bottomToolbar"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
-
-
-    <VideoView
-        android:id="@+id/videoPreview"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:visibility="gone"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/filterRecyclerView"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
-
 
     <!-- DRAGGABLE TEXT -->
 
@@ -85,7 +73,7 @@
 
     </LinearLayout>
 
-    <!-- TEXT TOOLBAR -->
+    <!-- COLOR PALETTE -->
 
     <LinearLayout
         android:id="@+id/textToolbar"
@@ -104,8 +92,8 @@
             android:id="@+id/btnBold"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:layout_marginEnd="25dp"
             android:src="@drawable/ic_bold"
+            android:layout_marginEnd="25dp"
             app:tint="#FFFFFF"/>
 
         <ImageView
@@ -114,7 +102,6 @@
             android:layout_height="40dp"
             android:src="@drawable/ic_palette"
             app:tint="#FFFFFF"/>
-
         <ImageView
             android:id="@+id/btnItalic"
             android:layout_width="40dp"
@@ -132,9 +119,6 @@
             app:tint="#FFFFFF"/>
 
     </LinearLayout>
-
-    <!-- COLOR PALETTE -->
-
     <HorizontalScrollView
         android:id="@+id/colorScroll"
         android:layout_width="0dp"
@@ -352,6 +336,7 @@
             </com.google.android.material.card.MaterialCardView>
 
         </LinearLayout>
+
 
     </HorizontalScrollView>
 
