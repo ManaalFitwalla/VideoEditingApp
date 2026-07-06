@@ -183,8 +183,9 @@ class EditorActivity : AppCompatActivity() {
 
                     size *= detector.scaleFactor
                     size = size.coerceIn(18f, 100f)
-
                     txtOverlay.textSize = size
+
+
                     return true
                 }
             }

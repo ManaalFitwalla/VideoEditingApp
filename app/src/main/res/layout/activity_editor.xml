@@ -29,6 +29,7 @@
         android:visibility="gone"
         android:background="#000"
 
+
         app:use_controller="false"
         app:resize_mode="fit"
 
