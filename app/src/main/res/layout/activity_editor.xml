@@ -24,6 +24,7 @@
 
     <androidx.media3.ui.PlayerView
         android:id="@+id/videoPreview"
+
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:visibility="gone"

@@ -51,6 +51,7 @@ class EditorActivity : AppCompatActivity() {
 
     private lateinit var btnFilter: MaterialCardView
     private lateinit var btnText: MaterialCardView
+
     private lateinit var btnSticker: MaterialCardView
     private lateinit var btnCrop: MaterialCardView
     private lateinit var btnAdjust: MaterialCardView
