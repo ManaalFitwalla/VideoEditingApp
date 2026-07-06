@@ -24,25 +24,18 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
 import com.google.android.material.card.MaterialCardView
+import android.content.Intent
 import kotlin.math.pow
 import kotlin.math.sqrt
+import androidx.activity.result.contract.ActivityResultContracts
+import java.io.File
+import com.yalantis.ucrop.UCrop
 import android.widget.VideoView
-import android.media.MediaPlayer
 
 class EditorActivity : AppCompatActivity() {
 
-    private val colors = arrayOf(
-        Color.WHITE,
-        Color.BLACK,
-        Color.RED,
-        Color.GREEN,
-        Color.BLUE,
-        Color.YELLOW,
-        Color.CYAN,
-        Color.MAGENTA
-    )
-
     private lateinit var imagePreview: ImageView
+    private lateinit var videoPreview: VideoView
     private lateinit var txtOverlay: TextView
 
     private lateinit var deleteLayout: LinearLayout
@@ -56,7 +49,12 @@ class EditorActivity : AppCompatActivity() {
     private lateinit var btnSticker: MaterialCardView
     private lateinit var btnCrop: MaterialCardView
     private lateinit var btnAdjust: MaterialCardView
-    private lateinit var videoPreview: VideoView
+    private lateinit var textToolbar: LinearLayout
+
+    private lateinit var btnColor: ImageView
+    private lateinit var btnBold: ImageView
+    private lateinit var btnItalic: ImageView
+    private lateinit var btnUnderline: ImageView
 
     private var originalBitmap: Bitmap? = null
 
@@ -65,20 +63,49 @@ class EditorActivity : AppCompatActivity() {
     private var lastClickTime = 0L
 
     private lateinit var scaleDetector: ScaleGestureDetector
+    private val cropLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
 
+            if (result.resultCode == RESULT_OK) {
+
+                val resultUri = UCrop.getOutput(result.data!!)
+
+                if (resultUri != null) {
+                    imagePreview.setImageURI(resultUri)
+                }
+            }
+        }
+
+    private val colors = arrayOf(
+        Color.WHITE,
+        Color.BLACK,
+        Color.RED,
+        Color.GREEN,
+        Color.BLUE,
+        Color.YELLOW,
+        Color.CYAN,
+        Color.MAGENTA,
+        Color.parseColor("#FF9800"),
+        Color.parseColor("#9C27B0")
+    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
+
+
+
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_editor)
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
+
             val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(bars.left, bars.top, bars.right, bars.bottom)
             insets
         }
 
         imagePreview = findViewById(R.id.imagePreview)
+        videoPreview = findViewById(R.id.videoPreview)
         txtOverlay = findViewById(R.id.txtOverlay)
 
         deleteLayout = findViewById(R.id.deleteLayout)
@@ -92,7 +119,12 @@ class EditorActivity : AppCompatActivity() {
         btnSticker = findViewById(R.id.btnSticker)
         btnCrop = findViewById(R.id.btnCrop)
         btnAdjust = findViewById(R.id.btnAdjust)
+        textToolbar = findViewById(R.id.textToolbar)
 
+        btnColor = findViewById(R.id.btnColor)
+        btnBold = findViewById(R.id.btnBold)
+        btnItalic = findViewById(R.id.btnItalic)
+        btnUnderline = findViewById(R.id.btnUnderline)
 
         filterRecyclerView.layoutManager =
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
@@ -105,7 +137,8 @@ class EditorActivity : AppCompatActivity() {
                 override fun onScale(detector: ScaleGestureDetector): Boolean {
 
                     var size =
-                        txtOverlay.textSize / resources.displayMetrics.scaledDensity
+                        txtOverlay.textSize /
+                                resources.displayMetrics.scaledDensity
 
                     size *= detector.scaleFactor
                     size = size.coerceIn(18f, 100f)
@@ -118,80 +151,47 @@ class EditorActivity : AppCompatActivity() {
 
         val mediaUri = intent.getStringExtra("MEDIA_URI")
 
+        val isVideo = intent.getBooleanExtra("IS_VIDEO", false)
+
         if (mediaUri != null) {
 
-            Glide.with(this)
-                .asBitmap()
-                .load(Uri.parse(mediaUri))
-                .into(object : CustomTarget<Bitmap>() {
+            if (isVideo) {
 
-                    override fun onResourceReady(
-                        resource: Bitmap,
-                        transition: Transition<in Bitmap>?
-                    ) {
+                imagePreview.visibility = View.GONE
+                videoPreview.visibility = View.VISIBLE
 
-                        originalBitmap = resource
-                        imagePreview.setImageBitmap(resource)
+                videoPreview.setVideoURI(Uri.parse(mediaUri))
 
-                        val thumb = Bitmap.createScaledBitmap(
-                            resource,
-                            150,
-                            150,
-                            true
-                        )
+                videoPreview.setOnPreparedListener { mp ->
+                    mp.isLooping = true
+                    videoPreview.start()
+                }
 
-                        val filters = listOf(
-                            FilterItem("Original", thumb),
-                            FilterItem("Bright", ImageFilters.bright(thumb)),
-                            FilterItem("Cool", ImageFilters.cool(thumb)),
-                            FilterItem("Warm", ImageFilters.warm(thumb)),
-                            FilterItem("Vintage", ImageFilters.vintage(thumb)),
-                            FilterItem("B&W", ImageFilters.blackAndWhite(thumb))
-                        )
+            } else {
 
-                        filterRecyclerView.adapter =
-                            FilterAdapter(filters) { filter ->
+                videoPreview.visibility = View.GONE
+                imagePreview.visibility = View.VISIBLE
 
-                                when (filter.name) {
+                Glide.with(this)
+                    .asBitmap()
+                    .load(Uri.parse(mediaUri))
+                    .into(object : CustomTarget<Bitmap>() {
 
-                                    "Original" ->
-                                        imagePreview.setImageBitmap(resource)
+                        override fun onResourceReady(
+                            resource: Bitmap,
+                            transition: Transition<in Bitmap>?
+                        ) {
 
-                                    "Bright" ->
-                                        imagePreview.setImageBitmap(
-                                            ImageFilters.bright(resource)
-                                        )
+                            originalBitmap = resource
+                            imagePreview.setImageBitmap(resource)
 
-                                    "Cool" ->
-                                        imagePreview.setImageBitmap(
-                                            ImageFilters.cool(resource)
-                                        )
+                            // Keep all your existing filter code here exactly as it is.
+                        }
 
-                                    "Warm" ->
-                                        imagePreview.setImageBitmap(
-                                            ImageFilters.warm(resource)
-                                        )
-
-                                    "Vintage" ->
-                                        imagePreview.setImageBitmap(
-                                            ImageFilters.vintage(resource)
-                                        )
-
-                                    "B&W" ->
-                                        imagePreview.setImageBitmap(
-                                            ImageFilters.blackAndWhite(resource)
-                                        )
-                                }
-                            }
-                    }
-
-                    override fun onLoadCleared(
-                        placeholder: Drawable?
-                    ) {
-                    }
-                })
+                        override fun onLoadCleared(placeholder: Drawable?) {}
+                    })
+            }
         }
-
         btnFilter.setOnClickListener {
 
             filterRecyclerView.visibility =
@@ -203,57 +203,148 @@ class EditorActivity : AppCompatActivity() {
 
         btnText.setOnClickListener {
 
+            filterRecyclerView.visibility = View.GONE
 
-        // ==========================
-        // FILTER BUTTON
-        // ==========================
+            val editText = EditText(this)
+            editText.hint = "Type something..."
 
-        btnFilter.setOnClickListener {
+            AlertDialog.Builder(this)
+                .setTitle("Add Text")
+                .setView(editText)
+                .setPositiveButton("Add") { _, _ ->
 
-            filterRecyclerView.visibility =
-                if (filterRecyclerView.visibility == View.VISIBLE)
+                    val text = editText.text.toString().trim()
+
+                    if (text.isNotEmpty()) {
+
+                        txtOverlay.text = text
+                        txtOverlay.visibility = View.VISIBLE
+
+                        textToolbar.visibility = View.VISIBLE
+
+                        txtOverlay.post {
+
+                            txtOverlay.x =
+                                imagePreview.x +
+                                        imagePreview.width / 2f -
+                                        txtOverlay.width / 2f
+
+                            txtOverlay.y =
+                                imagePreview.y +
+                                        imagePreview.height / 2f -
+                                        txtOverlay.height / 2f
+                        }
+                    }
+                }
+                .setNegativeButton("Cancel", null)
+                .show()
+        }
+
+        btnColor.setOnClickListener {
+
+            colorScroll.visibility =
+                if (colorScroll.visibility == View.VISIBLE)
                     View.GONE
                 else
                     View.VISIBLE
         }
 
-        // ==========================
-        // ADD TEXT
-        // ==========================
-        filterRecyclerView.visibility = View.GONE
+        colorContainer.removeAllViews()
 
-        val editText = EditText(this)
-        editText.hint = "Type something..."
+        for (color in colors) {
 
-        AlertDialog.Builder(this)
-            .setTitle("Add Text")
-            .setView(editText)
-            .setPositiveButton("Add") { _, _ ->
+            val colorView = View(this)
 
-                val text = editText.text.toString().trim()
+            val params = LinearLayout.LayoutParams(100,100)
+            params.setMargins(16,16,16,16)
 
-                if (text.isNotEmpty()) {
+            colorView.layoutParams = params
+            colorView.setBackgroundColor(color)
 
-                    txtOverlay.text = text
-                    txtOverlay.visibility = View.VISIBLE
+            colorView.setOnClickListener {
 
-                    txtOverlay.post {
+                txtOverlay.setTextColor(color)
 
-                        txtOverlay.x =
-                            imagePreview.x +
-                                    imagePreview.width / 2f -
-                                    txtOverlay.width / 2f
-
-                        txtOverlay.y =
-                            imagePreview.y +
-                                    imagePreview.height / 2f -
-                                    txtOverlay.height / 2f
-                    }
-                }
             }
-            .setNegativeButton("Cancel", null)
-            .show()
-    }
+
+            colorContainer.addView(colorView)
+        }
+
+        var isBold = false
+
+        btnBold.setOnClickListener {
+
+            isBold = !isBold
+
+            if (isBold)
+                txtOverlay.setTypeface(null, android.graphics.Typeface.BOLD)
+            else
+                txtOverlay.setTypeface(null, android.graphics.Typeface.NORMAL)
+
+        }
+        var isItalic = false
+
+        btnItalic.setOnClickListener {
+
+            isItalic = !isItalic
+
+            if (isItalic)
+                txtOverlay.setTypeface(null, android.graphics.Typeface.ITALIC)
+            else
+                txtOverlay.setTypeface(null, android.graphics.Typeface.NORMAL)
+
+        }
+
+        var isUnderline = false
+
+        btnUnderline.setOnClickListener {
+
+            isUnderline = !isUnderline
+
+            if (isUnderline) {
+
+                txtOverlay.paintFlags =
+                    txtOverlay.paintFlags or
+                            android.graphics.Paint.UNDERLINE_TEXT_FLAG
+
+            } else {
+
+                txtOverlay.paintFlags =
+                    txtOverlay.paintFlags and
+                            android.graphics.Paint.UNDERLINE_TEXT_FLAG.inv()
+
+            }
+        }
+
+
+        btnCrop.setOnClickListener {
+
+            if (mediaUri == null) return@setOnClickListener
+
+            val sourceUri = Uri.parse(mediaUri)
+            val destinationUri = Uri.fromFile(File(cacheDir, "cropped.jpg"))
+
+            val options = UCrop.Options().apply {
+                setFreeStyleCropEnabled(true)
+            }
+
+            val intent = UCrop.of(sourceUri, destinationUri)
+                .withOptions(options)
+                .getIntent(this)
+
+            cropLauncher.launch(intent)
+        }
+        txtOverlay.setOnLongClickListener {
+
+            colorScroll.visibility =
+                if (colorScroll.visibility == View.VISIBLE)
+                    View.GONE
+                else
+                    View.VISIBLE
+
+            true
+        }
+
         // ==========================
         // DRAG + PINCH TO RESIZE
         // ==========================
@@ -266,10 +357,10 @@ class EditorActivity : AppCompatActivity() {
 
                 MotionEvent.ACTION_DOWN -> {
 
-                    view.performClick()
-
                     dX = view.x - event.rawX
                     dY = view.y - event.rawY
+
+                    view.performClick()
 
                     deleteLayout.visibility = View.VISIBLE
 
@@ -299,16 +390,13 @@ class EditorActivity : AppCompatActivity() {
 
                         deleteLayout.scaleX = 1.3f
                         deleteLayout.scaleY = 1.3f
-                        deleteLayout.alpha = 1f
 
                     } else {
 
                         deleteLayout.scaleX = 1f
                         deleteLayout.scaleY = 1f
-                        deleteLayout.alpha = 0.8f
                     }
                 }
-
                 MotionEvent.ACTION_UP -> {
 
                     val centerX = view.x + view.width / 2
@@ -324,8 +412,8 @@ class EditorActivity : AppCompatActivity() {
 
                     if (distance < 180f) {
 
-                        txtOverlay.visibility = View.GONE
                         txtOverlay.text = ""
+                        txtOverlay.visibility = View.GONE
                     }
 
                     deleteLayout.animate()
@@ -338,91 +426,48 @@ class EditorActivity : AppCompatActivity() {
                 }
             }
 
-            false
+            true
         }
 
         // ==========================
         // DOUBLE TAP TO EDIT
         // ==========================
 
-        txtOverlay.setOnLongClickListener {
+        txtOverlay.setOnClickListener {
 
-            val editText = EditText(this)
-            editText.setText(txtOverlay.text)
-            editText.setSelection(editText.text.length)
+            val currentTime = System.currentTimeMillis()
 
-            AlertDialog.Builder(this)
-                .setTitle("Edit Text")
-                .setView(editText)
-                .setPositiveButton("Save") { _, _ ->
+            if (currentTime - lastClickTime < 300) {
 
-                    val newText = editText.text.toString().trim()
+                val editText = EditText(this)
+                editText.setText(txtOverlay.text)
+                editText.setSelection(editText.text.length)
 
-                    if (newText.isNotEmpty()) {
-                        txtOverlay.text = newText
+                AlertDialog.Builder(this)
+                    .setTitle("Edit Text")
+                    .setView(editText)
+                    .setPositiveButton("Save") { _, _ ->
+
+                        val newText = editText.text.toString().trim()
+
+                        if (newText.isNotEmpty()) {
+                            txtOverlay.text = newText
+                        }
                     }
-                }
-                .setNegativeButton("Cancel", null)
-                .show()
-
-            true
-        }
-
-        // ==========================
-        // COLOR PALETTE
-        // ==========================
-
-        colorContainer.removeAllViews()
-
-        colorContainer.removeAllViews()
-
-        for (color in colors) {
-
-            val colorView = View(this)
-
-            val params = LinearLayout.LayoutParams(100, 100)
-            params.setMargins(16, 16, 16, 16)
-
-            colorView.layoutParams = params
-            colorView.setBackgroundColor(color)
-
-            colorView.setOnClickListener {
-                txtOverlay.setTextColor(color)
-                colorScroll.visibility = View.GONE
+                    .setNegativeButton("Cancel", null)
+                    .show()
             }
 
-            colorContainer.addView(colorView)
+            lastClickTime = currentTime
         }
-
-        txtOverlay.setOnLongClickListener {
-
-            android.widget.Toast.makeText(
-                this,
-                "Long Press Working",
-                android.widget.Toast.LENGTH_SHORT
-            ).show()
-
-            colorScroll.visibility = View.VISIBLE
-            colorScroll.bringToFront()
-            colorScroll.requestLayout()
-            true
-        }
-        // ==========================
-        // HIDE FILTER BAR
-        // ==========================
 
         btnSticker.setOnClickListener {
-            filterRecyclerView.visibility = View.GONE
-        }
-
-        btnCrop.setOnClickListener {
             filterRecyclerView.visibility = View.GONE
         }
 
         btnAdjust.setOnClickListener {
             filterRecyclerView.visibility = View.GONE
         }
-
         // ==========================
         // DEFAULT TEXT STYLE
         // ==========================
@@ -430,8 +475,14 @@ class EditorActivity : AppCompatActivity() {
         txtOverlay.apply {
             textSize = 34f
             setTextColor(Color.WHITE)
-            setShadowLayer(10f,3f,3f,Color.BLACK)
+            setShadowLayer(
+                10f,
+                3f,
+                3f,
+                Color.BLACK
+            )
             visibility = View.GONE
         }
-    }
-}
+
+    } // End of onCreate()
+} // End of EditorActivity
