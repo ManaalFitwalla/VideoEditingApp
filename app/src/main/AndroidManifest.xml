@@ -20,6 +20,9 @@
             android:name=".EditorActivity"
             android:exported="false" />
         <activity
+            android:name="com.yalantis.ucrop.UCropActivity"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
+        <activity
             android:name=".PreviewActivity"
             android:exported="false" />
         <activity
