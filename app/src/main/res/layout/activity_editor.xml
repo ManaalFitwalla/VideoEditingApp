@@ -22,11 +22,17 @@
         app:layout_constraintEnd_toEndOf="parent"/>
 
 
-    <VideoView
+    <androidx.media3.ui.PlayerView
         android:id="@+id/videoPreview"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:visibility="gone"
+        android:background="#000"
+
+
+        app:use_controller="false"
+        app:resize_mode="fit"
+
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toTopOf="@id/filterRecyclerView"
         app:layout_constraintStart_toStartOf="parent"
@@ -344,6 +350,36 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Adjust"
+                        android:textColor="#FFFFFF"
+                        android:textStyle="bold"/>
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/btnBrightness"
+                android:layout_width="85dp"
+                android:layout_height="75dp"
+                android:layout_marginEnd="10dp"
+                app:cardCornerRadius="16dp"
+                app:cardBackgroundColor="#2A2A2A">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:orientation="vertical">
+
+                    <ImageView
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
+                        android:src="@drawable/ic_adjust"
+                        app:tint="#FFFFFF"/>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Brightness"
                         android:textColor="#FFFFFF"
                         android:textStyle="bold"/>
 
