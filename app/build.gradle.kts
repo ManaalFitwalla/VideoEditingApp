@@ -37,7 +37,7 @@ android {
 }
 
 dependencies {
-    implementation("com.arthenica:ffmpeg-kit-full:6.0-2")
+    //implementation("com.arthenica:ffmpeg-kit-full:6.0-2")
 
 
     implementation("jp.co.cyberagent.android:gpuimage:2.1.0")
