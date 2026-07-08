@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#000">
+
+    <!-- Top Bar -->
+
+    <ImageView
+        android:id="@+id/btnclose"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_margin="20dp"
+        android:src="@drawable/ic_close"
+        android:tint="#FFFFFF"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"/>
+
+    <TextView
+        android:id="@+id/title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Trim"
+        android:textColor="#FFFFFF"
+        android:textStyle="bold"
+        android:textSize="22sp"
+        app:layout_constraintTop_toTopOf="@id/btnclose"
+        app:layout_constraintBottom_toBottomOf="@id/btnclose"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <ImageView
+        android:id="@+id/btnDone"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:layout_marginEnd="22dp"
+        android:layout_marginTop="20dp"
+        android:src="@drawable/ic_done"
+        android:tint="#FFFFFF"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+    <!-- Video -->
+
+    <androidx.media3.ui.PlayerView
+        android:id="@+id/playerView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:use_controller="true"
+        app:resize_mode="fit"
+
+        app:layout_constraintTop_toBottomOf="@id/btnclose"
+        app:layout_constraintBottom_toTopOf="@id/timeText"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <!-- Time -->
+
+    <TextView
+        android:id="@+id/timeText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="00:00 / 00:00"
+        android:textColor="#FFFFFF"
+        android:textSize="18sp"
+        app:layout_constraintBottom_toTopOf="@id/trimContainer"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <!-- Thumbnail Strip -->
+
+
+
+    <!-- Temporary SeekBar -->
+
+    <FrameLayout
+        android:id="@+id/trimContainer"
+        android:layout_width="0dp"
+        android:layout_height="90dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="25dp"
+        android:background="#222222"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <!-- Thumbnail Strip -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/thumbRecycler"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+
+        <!-- Left Dark Area -->
+        <View
+            android:id="@+id/leftShade"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:background="#99000000"/>
+
+        <!-- Right Dark Area -->
+        <View
+            android:id="@+id/rightShade"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="end"
+            android:background="#99000000"/>
+
+        <!-- Left Handle -->
+        <ImageView
+            android:id="@+id/leftHandle"
+            android:layout_width="18dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="start"
+            android:background="#FFFFFF"/>
+
+        <!-- Right Handle -->
+        <ImageView
+            android:id="@+id/rightHandle"
+            android:layout_width="18dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="end"
+            android:background="#FFFFFF"/>
+
+    </FrameLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

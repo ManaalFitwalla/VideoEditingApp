@@ -37,8 +37,9 @@ android {
 }
 
 dependencies {
-    implementation("com.arthenica:ffmpeg-kit-full:6.0-2")
 
+    implementation("androidx.media3:media3-transformer:1.7.1")
+    implementation(libs.androidx.activity.ktx)
 
     implementation("jp.co.cyberagent.android:gpuimage:2.1.0")
     implementation("androidx.media3:media3-effect:1.7.1")
@@ -50,7 +51,6 @@ dependencies {
 
     implementation("androidx.recyclerview:recyclerview:1.4.0")
 
-    implementation(libs.androidx.activity.ktx)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
