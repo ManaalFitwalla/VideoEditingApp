@@ -14,6 +14,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.FabCut">
         <activity
+            android:name=".VideoTrimActivity"
+            android:exported="false" />
+        <activity
             android:name=".VideoEditorActivity"
             android:exported="false" />
         <activity
@@ -21,7 +24,7 @@
             android:exported="false" />
         <activity
             android:name="com.yalantis.ucrop.UCropActivity"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
         <activity
             android:name=".PreviewActivity"
             android:exported="false" />
@@ -34,6 +37,9 @@
         <activity
             android:name=".MainActivity"
             android:exported="false" />
+        <activity
+            android:name=".VideoTrimActivity"
+            android:exported="false"/>
         <activity
             android:name=".SplashActivity"
             android:exported="true">
