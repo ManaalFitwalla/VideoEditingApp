@@ -27,7 +27,6 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
 import com.google.android.material.card.MaterialCardView
-import android.content.Intent
 import kotlin.math.pow
 import kotlin.math.sqrt
 import androidx.activity.result.contract.ActivityResultContracts
@@ -37,6 +36,9 @@ import androidx.media3.ui.PlayerView
 import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
 class EditorActivity : AppCompatActivity() {
+
+    private lateinit var imgCropCut: ImageView
+    private lateinit var txtCropCut: TextView
 
     private lateinit var imagePreview: ImageView
     private lateinit var videoPreview: PlayerView
@@ -143,6 +145,9 @@ class EditorActivity : AppCompatActivity() {
             v.setPadding(bars.left, bars.top, bars.right, bars.bottom)
             insets
         }
+        imgCropCut = findViewById(R.id.imgCropCut)
+
+        txtCropCut = findViewById(R.id.txtCropCut)
 
         imagePreview = findViewById(R.id.imagePreview)
         videoPreview = findViewById(R.id.videoPreview)
@@ -195,6 +200,19 @@ class EditorActivity : AppCompatActivity() {
         val mediaUri = intent.getStringExtra("MEDIA_URI")
 
         val isVideo = intent.getBooleanExtra("IS_VIDEO", false)
+        if (isVideo) {
+            txtCropCut.text = "Cut"
+            imgCropCut.setImageResource(R.drawable.ic_cut)
+        } else {
+            txtCropCut.text = "Crop"
+            imgCropCut.setImageResource(R.drawable.ic_crop)
+        }
+
+        if (isVideo) {
+            txtCropCut.text = "Cut"
+        } else {
+            txtCropCut.text = "Crop"
+        }
 
         if (mediaUri != null) {
 
