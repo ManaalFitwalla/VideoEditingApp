@@ -21,6 +21,7 @@ import androidx.media3.transformer.ExportResult
 import androidx.media3.transformer.ExportException
 import java.io.File
 import android.widget.Toast
+import kotlin.text.compareTo
 
 
 class VideoTrimActivity : AppCompatActivity() {
@@ -123,22 +124,16 @@ class VideoTrimActivity : AppCompatActivity() {
             }
         })
         generateThumbnails(uri)
-        player.addListener(object : Player.Listener {
+        leftHandle.bringToFront()
+        rightHandle.bringToFront()
 
-            override fun onEvents(player: Player, events: Player.Events) {
-
-                if (player.currentPosition >= trimEnd && trimEnd > 0) {
-                    player.seekTo(trimStart)
-                }
-            }
-        })
         leftHandle.setOnTouchListener { v, event ->
 
             when(event.action){
 
                 android.view.MotionEvent.ACTION_MOVE->{
 
-                    var newX = event.rawX
+                    var newX = event.x + v.x
 
                     if(newX<0)
                         newX=0f
@@ -146,13 +141,15 @@ class VideoTrimActivity : AppCompatActivity() {
                     if(newX>rightHandle.x-120)
                         newX=rightHandle.x-120
 
-                    leftHandle.x=newX
+                    leftHandle.x = newX
+                    player.seekTo(trimStart)
                     trimStart =
                         (
                                 leftHandle.x/
                                         trimContainer.width*
                                         videoDuration
                                 ).toLong()
+                    player.seekTo(trimStart)
 
                     timeText.text =
                         "${trimStart/1000}s - ${trimEnd/1000}s"
@@ -169,7 +166,7 @@ class VideoTrimActivity : AppCompatActivity() {
 
                 android.view.MotionEvent.ACTION_MOVE->{
 
-                    var newX = event.rawX
+                    var newX = event.x + v.x
 
                     if(newX<leftHandle.x+120)
                         newX=leftHandle.x+120
@@ -187,7 +184,6 @@ class VideoTrimActivity : AppCompatActivity() {
 
                     timeText.text =
                         "${trimStart/1000}s - ${trimEnd/1000}s"
-                    player.seekTo(trimStart)
                     player.seekTo(trimEnd)
 
                 }
@@ -206,7 +202,23 @@ class VideoTrimActivity : AppCompatActivity() {
 
             rightHandle.x = endX
         }
+        val handler = android.os.Handler(android.os.Looper.getMainLooper())
+
+        handler.post(object : Runnable {
+            override fun run() {
+
+                if (::player.isInitialized && player.isPlaying) {
+
+                    if (player.currentPosition >= trimEnd) {
+                        player.seekTo(trimStart)
+                    }
+                }
+
+                handler.postDelayed(this, 100)
+            }
+        })
 }
+
 
     private fun generateThumbnails(videoUri: Uri) {
 
