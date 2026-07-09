@@ -17,11 +17,17 @@
             android:name=".VideoEditorActivity"
             android:exported="false" />
         <activity
+            android:name=".VideoTrimActivity"
+            android:exported="false" />
+        <activity
+            android:name=".VideoTrimActivity"
+            android:exported="false" />
+        <activity
             android:name=".EditorActivity"
             android:exported="false" />
         <activity
             android:name="com.yalantis.ucrop.UCropActivity"
-            android:theme="@style/Theme.AppCompat.Light.NoActionBar"/>
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
         <activity
             android:name=".PreviewActivity"
             android:exported="false" />

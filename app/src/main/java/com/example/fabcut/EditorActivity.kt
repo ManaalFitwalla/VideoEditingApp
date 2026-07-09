@@ -1,8 +1,12 @@
 package com.example.fabcut
 
+import android.widget.Toast
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.common.Effect
+import androidx.media3.common.Player
+import android.content.Intent
 import android.media.MediaMetadataRetriever
 import androidx.media3.effect.RgbFilter
-import androidx.media3.common.util.UnstableApi
 import android.app.AlertDialog
 import android.graphics.Bitmap
 import android.graphics.Color
@@ -35,6 +39,7 @@ import com.yalantis.ucrop.UCrop
 import androidx.media3.ui.PlayerView
 import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
+import android.widget.FrameLayout
 class EditorActivity : AppCompatActivity() {
 
     private lateinit var imgCropCut: ImageView
@@ -42,6 +47,7 @@ class EditorActivity : AppCompatActivity() {
 
     private lateinit var imagePreview: ImageView
     private lateinit var videoPreview: PlayerView
+    private lateinit var bottomToolbar: HorizontalScrollView
     private lateinit var player: ExoPlayer
     private lateinit var txtOverlay: TextView
 
@@ -53,6 +59,7 @@ class EditorActivity : AppCompatActivity() {
 
     private lateinit var btnFilter: MaterialCardView
     private lateinit var btnText: MaterialCardView
+
     private lateinit var btnSticker: MaterialCardView
     private lateinit var btnCrop: MaterialCardView
     private lateinit var btnAdjust: MaterialCardView
@@ -62,6 +69,24 @@ class EditorActivity : AppCompatActivity() {
     private lateinit var btnBold: ImageView
     private lateinit var btnItalic: ImageView
     private lateinit var btnUnderline: ImageView
+    private lateinit var trimContainer: FrameLayout
+    private lateinit var timeText: TextView
+    private lateinit var thumbRecycler: RecyclerView
+
+    private lateinit var leftHandle: ImageView
+    private lateinit var rightHandle: ImageView
+
+    private lateinit var leftShade: View
+    private lateinit var rightShade: View
+
+    private val thumbnailList = ArrayList<Bitmap>()
+
+    private var videoDuration = 0L
+    private var trimStart = 0L
+    private var trimEnd = 0L
+
+    private var startX = 0f
+    private var endX = 0f
 
     private var originalBitmap: Bitmap? = null
 
@@ -90,8 +115,7 @@ class EditorActivity : AppCompatActivity() {
             listOf(filter)
         )
 
-        player.prepare()
-        player.play()
+        player.seekTo(player.currentPosition)
     }
     private fun getVideoThumbnail(videoUri: Uri): Bitmap? {
 
@@ -129,7 +153,42 @@ class EditorActivity : AppCompatActivity() {
         Color.parseColor("#FF9800"),
         Color.parseColor("#9C27B0")
     )
+    private fun generateThumbnails(videoUri: Uri) {
 
+        val retriever = MediaMetadataRetriever()
+
+        retriever.setDataSource(this, videoUri)
+
+        val duration =
+            retriever.extractMetadata(
+                MediaMetadataRetriever.METADATA_KEY_DURATION
+            )?.toLong() ?: 0L
+
+        thumbnailList.clear()
+
+        val frameCount = 10
+
+        for (i in 0 until frameCount) {
+
+            val timeUs =
+                (duration * 1000 / frameCount) * i
+
+            val bitmap =
+                retriever.getFrameAtTime(
+                    timeUs,
+                    MediaMetadataRetriever.OPTION_CLOSEST_SYNC
+                )
+
+            bitmap?.let {
+                thumbnailList.add(it)
+            }
+        }
+
+        retriever.release()
+
+        thumbRecycler.adapter = ThumbnailAdapter(thumbnailList)
+    }
+    @UnstableApi
     override fun onCreate(savedInstanceState: Bundle?) {
 
 
@@ -155,6 +214,7 @@ class EditorActivity : AppCompatActivity() {
         deleteLayout = findViewById(R.id.deleteLayout)
         colorScroll = findViewById(R.id.colorScroll)
         colorContainer = findViewById(R.id.colorContainer)
+        bottomToolbar = findViewById(R.id.bottomToolbar)
 
         filterRecyclerView = findViewById(R.id.filterRecyclerView)
 
@@ -167,6 +227,18 @@ class EditorActivity : AppCompatActivity() {
 
         btnColor = findViewById(R.id.btnColor)
         btnBold = findViewById(R.id.btnBold)
+        trimContainer = findViewById(R.id.trimContainer)
+        timeText = findViewById(R.id.timeText)
+        thumbRecycler = findViewById(R.id.thumbRecycler)
+
+        leftHandle = findViewById(R.id.leftHandle)
+        rightHandle = findViewById(R.id.rightHandle)
+
+        leftShade = findViewById(R.id.leftShade)
+        rightShade = findViewById(R.id.rightShade)
+
+        thumbRecycler.layoutManager =
+            LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
         btnItalic = findViewById(R.id.btnItalic)
         btnUnderline = findViewById(R.id.btnUnderline)
         player = ExoPlayer.Builder(this).build()
@@ -226,6 +298,23 @@ class EditorActivity : AppCompatActivity() {
                 player.prepare()
                 player.repeatMode = ExoPlayer.REPEAT_MODE_ONE
                 player.play()
+                player.addListener(object : Player.Listener {
+
+                    override fun onPlaybackStateChanged(state: Int) {
+
+                        if (state == Player.STATE_READY) {
+
+                            videoDuration = player.duration
+
+                            trimStart = 0
+                            trimEnd = videoDuration
+
+                            timeText.text = "0s - ${videoDuration / 1000}s"
+
+                            generateThumbnails(Uri.parse(mediaUri))
+                        }
+                    }
+                })
                 val thumb = getVideoThumbnail(Uri.parse(mediaUri))
 
                 if (thumb != null) {
@@ -249,8 +338,17 @@ class EditorActivity : AppCompatActivity() {
                     filterRecyclerView.adapter =
                         FilterAdapter(filters) { filter ->
 
-                            // We'll make these actually affect the video
-                            // in the next step.
+                            when (filter.name) {
+
+                                "Original" -> {
+                                    player.setVideoEffects(emptyList())
+                                }
+
+                                "B&W" -> {
+                                    Toast.makeText(this, "B&W clicked", Toast.LENGTH_SHORT).show()
+                                    applyVideoFilter(RgbFilter.createGrayscaleFilter())
+                                }
+                            }
                         }
                 }
 
@@ -465,11 +563,15 @@ class EditorActivity : AppCompatActivity() {
 
             if (videoPreview.visibility == View.VISIBLE) {
 
-                android.widget.Toast.makeText(
-                    this,
-                    "Crop is available only for images.",
-                    android.widget.Toast.LENGTH_SHORT
-                ).show()
+                trimContainer.visibility = View.VISIBLE
+                timeText.visibility = View.VISIBLE
+                bottomToolbar.visibility = View.GONE
+                videoPreview.useController = true
+                videoPreview.showController()
+
+                filterRecyclerView.visibility = View.GONE
+                textToolbar.visibility = View.GONE
+                colorScroll.visibility = View.GONE
 
                 return@setOnClickListener
             }
