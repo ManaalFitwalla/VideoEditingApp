@@ -85,46 +85,19 @@ class VideoTrimActivity : AppCompatActivity() {
         btnDone = findViewById(R.id.btnDone)
         val outputFile = File(cacheDir, "trimmed_video.mp4")
         btnClose.setOnClickListener {
+
+            setResult(RESULT_CANCELED)
             finish()
         }
-
         btnDone.setOnClickListener {
 
-            val inputUri = Uri.parse(intent.getStringExtra("VIDEO_URI"))
+            val data = Intent()
 
-            val outputFile = File(cacheDir, "trimmed_video.mp4")
+            data.putExtra("TRIM_START", trimStart)
+            data.putExtra("TRIM_END", trimEnd)
 
-            VideoExporter.trimVideo(
-                context = this,
-                inputUri = inputUri,
-                startMs = trimStart,
-                endMs = trimEnd,
-                outputFile = outputFile,
-
-                onSuccess = {
-
-                    runOnUiThread {
-
-                        val data = Intent()
-                        data.putExtra("TRIMMED_VIDEO", outputFile.absolutePath)
-
-                        if (trimEnd <= trimStart) {
-                            trimEnd = videoDuration
-                        }
-
-                        setResult(RESULT_OK, data)
-                        finish()
-                    }
-                },
-
-                onError = {
-
-                    runOnUiThread {
-
-                        it.printStackTrace()
-                    }
-                }
-            )
+            setResult(RESULT_OK, data)
+            finish()
         }
         thumbRecycler.layoutManager =
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
