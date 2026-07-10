@@ -98,46 +98,31 @@ class EditorActivity : AppCompatActivity() {
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
 
             if (result.resultCode == RESULT_OK) {
+                trimStart = result.data?.getLongExtra("TRIM_START", 0L) ?: 0L
+                trimEnd = result.data?.getLongExtra("TRIM_END", player.duration) ?: player.duration
 
-                val trimmedPath = result.data?.getStringExtra("TRIMMED_VIDEO")
-
-                if (trimmedPath == null) {
-                    Toast.makeText(this, "Trimmed file not found", Toast.LENGTH_LONG).show()
-                    return@registerForActivityResult
-                }
-
-                val file = File(trimmedPath)
-
-                mediaUri = Uri.fromFile(file).toString()
-
-                player.stop()
-                player.clearMediaItems()
-
-                val mediaItem = MediaItem.fromUri(Uri.fromFile(file))
+                val mediaItem = MediaItem.Builder()
+                    .setUri(Uri.parse(mediaUri))
+                    .setClippingConfiguration(
+                        MediaItem.ClippingConfiguration.Builder()
+                            .setStartPositionMs(trimStart)
+                            .setEndPositionMs(trimEnd)
+                            .build()
+                    )
+                    .build()
 
                 player.setMediaItem(mediaItem)
                 player.prepare()
+                player.play()
 
-                player.addListener(object : Player.Listener {
-                    override fun onPlaybackStateChanged(state: Int) {
+                timeText.text = "${trimStart / 1000}s - ${trimEnd / 1000}s"
 
-                        if (state == Player.STATE_READY) {
 
-                            videoDuration = player.duration
-                            trimStart = 0L
-                            trimEnd = videoDuration
+            }
+            else {
 
-                            timeText.text = "0s - ${videoDuration / 1000}s"
+                player.play()
 
-                            generateThumbnails(Uri.fromFile(file))
-
-                            player.play()
-                        }
-                    }
-                })
-                timeText.text = "0s - ${videoDuration / 1000}s"
-
-                generateThumbnails(Uri.fromFile(file))
             }
         }
 
@@ -341,7 +326,7 @@ class EditorActivity : AppCompatActivity() {
 
         val isVideo = intent.getBooleanExtra("IS_VIDEO", false)
         if (isVideo) {
-            txtCropCut.text = "Cut"
+            txtCropCut.text = "Trim"
             imgCropCut.setImageResource(R.drawable.ic_cut)
         } else {
             txtCropCut.text = "Crop"
@@ -349,7 +334,7 @@ class EditorActivity : AppCompatActivity() {
         }
 
         if (isVideo) {
-            txtCropCut.text = "Cut"
+            txtCropCut.text = "Trim"
         } else {
             txtCropCut.text = "Crop"
         }
@@ -360,15 +345,7 @@ class EditorActivity : AppCompatActivity() {
                 imagePreview.visibility = View.GONE
                 videoPreview.visibility = View.VISIBLE
 
-                val mediaItem = MediaItem.Builder()
-                    .setUri(Uri.parse(mediaUri))
-                    .setClippingConfiguration(
-                        MediaItem.ClippingConfiguration.Builder()
-                            .setStartPositionMs(trimStart)
-                            .setEndPositionMs(trimEnd)
-                            .build()
-                    )
-                    .build()
+                val mediaItem = MediaItem.fromUri(Uri.parse(mediaUri))
 
                 player.setMediaItem(mediaItem)
                 player.prepare()
@@ -638,7 +615,7 @@ class EditorActivity : AppCompatActivity() {
 
             if (videoPreview.visibility == View.VISIBLE) {
 
-                player.pause()
+
 
                 val intent = Intent(this, VideoTrimActivity::class.java)
                 intent.putExtra("VIDEO_URI", mediaUri)
@@ -816,6 +793,10 @@ class EditorActivity : AppCompatActivity() {
     override fun onStop() {
         super.onStop()
 
+       // player.release()
+    }
+    override fun onDestroy() {
+        super.onDestroy()
         player.release()
     }
 } // End of EditorActivity

@@ -14,6 +14,7 @@ import java.io.File
 object VideoExporter {
 
     fun trimVideo(
+
         context: Context,
         inputUri: Uri,
         startMs: Long,
@@ -22,10 +23,18 @@ object VideoExporter {
         onSuccess: (File) -> Unit,
         onError: (Exception) -> Unit
     ) {
-
+        android.util.Log.d("TRIM_TEST", "trimVideo started")
         if (outputFile.exists()) outputFile.delete()
 
-        val mediaItem = MediaItem.fromUri(inputUri)
+        val mediaItem = MediaItem.Builder()
+            .setUri(inputUri)
+            .setClippingConfiguration(
+                MediaItem.ClippingConfiguration.Builder()
+                    .setStartPositionMs(startMs)
+                    .setEndPositionMs(endMs)
+                    .build()
+            )
+            .build()
 
         val editedItem = EditedMediaItem.Builder(mediaItem).build()
 
@@ -42,6 +51,7 @@ object VideoExporter {
                 composition: androidx.media3.transformer.Composition,
                 exportResult: ExportResult
             ) {
+                android.util.Log.d("TRIM_TEST", "Export completed")
                 onSuccess(outputFile)
             }
 
@@ -50,6 +60,7 @@ object VideoExporter {
                 exportResult: ExportResult,
                 exportException: ExportException
             ) {
+                android.util.Log.e("TRIM_TEST", "Export failed", exportException)
                 onError(exportException)
             }
         })
