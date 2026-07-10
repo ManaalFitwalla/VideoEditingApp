@@ -24,17 +24,23 @@
 
     <androidx.media3.ui.PlayerView
         android:id="@+id/videoPreview"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#000"
+        android:visibility="gone"
+        app:use_controller="true"
+        app:resize_mode="zoom"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/filterRecyclerView"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
 
-        android:layout_width="0dp"
-        android:layout_height="0dp"
+    <android.opengl.GLSurfaceView
+        android:id="@+id/glVideoView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:visibility="gone"
         android:background="#000"
-        android:layout_marginBottom="120dp"
-
-
-        app:use_controller="true"
-        app:resize_mode="fit"
-
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toTopOf="@id/filterRecyclerView"
         app:layout_constraintStart_toStartOf="parent"
@@ -441,6 +447,14 @@
                         android:textColor="#FFFFFF"
                         android:textStyle="bold"/>
 
+                    <SeekBar
+                        android:id="@+id/brightnessSeekBar"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:max="200"
+                        android:progress="100"
+                        android:visibility="gone"/>
+
                 </LinearLayout>
 
             </com.google.android.material.card.MaterialCardView>
@@ -450,7 +464,7 @@
                 android:layout_height="75dp"
                 android:layout_marginEnd="10dp"
                 app:cardCornerRadius="16dp"
-                app:cardBackgroundColor="#2A2A2A">
+                app:cardBackgroundColor="#2A2A2A"/>
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -473,7 +487,6 @@
 
                 </LinearLayout>
 
-            </com.google.android.material.card.MaterialCardView>
 
         </LinearLayout>
 
