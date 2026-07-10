@@ -15,7 +15,7 @@
         android:layout_height="30dp"
         android:layout_margin="20dp"
         android:src="@drawable/ic_close"
-        android:tint="#FFFFFF"
+        app:tint="#FFFFFF"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"/>
 
@@ -39,22 +39,36 @@
         android:layout_marginEnd="22dp"
         android:layout_marginTop="20dp"
         android:src="@drawable/ic_done"
-        android:tint="#FFFFFF"
+        app:tint="#FFFFFF"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
     <!-- Video -->
 
-    <androidx.media3.ui.PlayerView
-        android:id="@+id/playerView"
+    <FrameLayout
+        android:id="@+id/playerContainer"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        app:use_controller="true"
-        app:resize_mode="fit"
-
         app:layout_constraintTop_toBottomOf="@id/btnclose"
         app:layout_constraintBottom_toTopOf="@id/timeText"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <androidx.media3.ui.PlayerView
+            android:id="@+id/playerView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:resize_mode="fit"
+            app:use_controller="false"/>
+
+        <ImageView
+            android:id="@+id/btnPlayPause"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:layout_gravity="center"
+            android:src="@drawable/ic_play"
+            android:background="@android:color/transparent"/>
+    </FrameLayout>
+
 
     <!-- Time -->
 
@@ -100,6 +114,7 @@
             android:layout_height="match_parent"
             android:background="#99000000"/>
 
+
         <!-- Right Dark Area -->
         <View
             android:id="@+id/rightShade"
@@ -108,13 +123,26 @@
             android:layout_gravity="end"
             android:background="#99000000"/>
 
+        <View
+            android:id="@+id/selectionBorder"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/trim_border"/>
+
+        <View
+            android:id="@+id/playHead"
+            android:layout_width="2dp"
+            android:layout_height="match_parent"
+            android:background="@android:color/white"/>
+
+
         <!-- Left Handle -->
         <ImageView
             android:id="@+id/leftHandle"
-            android:layout_width="18dp"
+            android:layout_width="24dp"
             android:layout_height="match_parent"
             android:layout_gravity="start"
-            android:background="#FFFFFF"/>
+            android:background="@drawable/trim_handle"/>
 
         <!-- Right Handle -->
         <ImageView
@@ -122,7 +150,7 @@
             android:layout_width="18dp"
             android:layout_height="match_parent"
             android:layout_gravity="end"
-            android:background="#FFFFFF"/>
+            android:background="@drawable/trim_handle"/>
 
     </FrameLayout>
 
