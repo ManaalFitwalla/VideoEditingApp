@@ -210,9 +210,19 @@
         <!-- Thumbnail Strip -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/thumbRecycler"
-            android:background="#FF0000"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"/>
+            android:layout_height="match_parent"
+            android:overScrollMode="never"
+            android:clipToPadding="false"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"/>
+
+        <View
+            android:id="@+id/playHead"
+            android:layout_width="2dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="center_horizontal"
+            android:background="@android:color/white"/>
 
         <!-- Left Dark Area -->
         <View
@@ -232,19 +242,19 @@
         <!-- Left Handle -->
         <ImageView
             android:id="@+id/leftHandle"
-            android:layout_width="40dp"
+            android:layout_width="20dp"
             android:layout_height="match_parent"
             android:layout_gravity="start"
-            android:background="#FFFFFF"
+            android:background="@drawable/trim_handle"
             android:elevation="10dp"/>
 
         <!-- Right Handle -->
         <ImageView
             android:id="@+id/rightHandle"
-            android:layout_width="40dp"
+            android:layout_width="20dp"
             android:layout_height="match_parent"
             android:layout_gravity="end"
-            android:background="#FFFFFF"
+            android:background="@drawable/trim_handle"
             android:elevation="10dp"/>
 
     </FrameLayout>

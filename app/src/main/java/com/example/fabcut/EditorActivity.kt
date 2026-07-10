@@ -2,7 +2,6 @@ package com.example.fabcut
 
 import android.widget.Toast
 import androidx.media3.common.util.UnstableApi
-import androidx.media3.common.Effect
 import androidx.media3.common.Player
 import android.content.Intent
 import android.media.MediaMetadataRetriever
@@ -90,9 +89,57 @@ class EditorActivity : AppCompatActivity() {
 
     private var originalBitmap: Bitmap? = null
 
+    private lateinit var mediaUri: String
+
     private var dX = 0f
     private var dY = 0f
     private var lastClickTime = 0L
+    private val trimLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+
+            if (result.resultCode == RESULT_OK) {
+
+                val trimmedPath = result.data?.getStringExtra("TRIMMED_VIDEO")
+
+                if (trimmedPath == null) {
+                    Toast.makeText(this, "Trimmed file not found", Toast.LENGTH_LONG).show()
+                    return@registerForActivityResult
+                }
+
+                val file = File(trimmedPath)
+
+                mediaUri = Uri.fromFile(file).toString()
+
+                player.stop()
+                player.clearMediaItems()
+
+                val mediaItem = MediaItem.fromUri(Uri.fromFile(file))
+
+                player.setMediaItem(mediaItem)
+                player.prepare()
+
+                player.addListener(object : Player.Listener {
+                    override fun onPlaybackStateChanged(state: Int) {
+
+                        if (state == Player.STATE_READY) {
+
+                            videoDuration = player.duration
+                            trimStart = 0L
+                            trimEnd = videoDuration
+
+                            timeText.text = "0s - ${videoDuration / 1000}s"
+
+                            generateThumbnails(Uri.fromFile(file))
+
+                            player.play()
+                        }
+                    }
+                })
+                timeText.text = "0s - ${videoDuration / 1000}s"
+
+                generateThumbnails(Uri.fromFile(file))
+            }
+        }
 
     private lateinit var scaleDetector: ScaleGestureDetector
     private val cropLauncher =
@@ -239,6 +286,28 @@ class EditorActivity : AppCompatActivity() {
 
         thumbRecycler.layoutManager =
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+
+        thumbRecycler.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+
+            override fun onScrolled(
+                recyclerView: RecyclerView,
+                dx: Int,
+                dy: Int
+            ) {
+
+                val offset = recyclerView.computeHorizontalScrollOffset()
+                val range = recyclerView.computeHorizontalScrollRange()
+                val extent = recyclerView.computeHorizontalScrollExtent()
+
+                val progress =
+                    offset.toFloat() / (range - extent).coerceAtLeast(1)
+
+                val position =
+                    (progress * videoDuration).toLong()
+
+                player.seekTo(position)
+            }
+        })
         btnItalic = findViewById(R.id.btnItalic)
         btnUnderline = findViewById(R.id.btnUnderline)
         player = ExoPlayer.Builder(this).build()
@@ -268,7 +337,7 @@ class EditorActivity : AppCompatActivity() {
             }
         )
 
-        val mediaUri = intent.getStringExtra("MEDIA_URI")
+        mediaUri = intent.getStringExtra("MEDIA_URI")!!
 
         val isVideo = intent.getBooleanExtra("IS_VIDEO", false)
         if (isVideo) {
@@ -284,19 +353,25 @@ class EditorActivity : AppCompatActivity() {
         } else {
             txtCropCut.text = "Crop"
         }
-
-        if (mediaUri != null) {
+        run {
 
             if (isVideo) {
 
                 imagePreview.visibility = View.GONE
                 videoPreview.visibility = View.VISIBLE
 
-                val mediaItem = MediaItem.fromUri(Uri.parse(mediaUri))
+                val mediaItem = MediaItem.Builder()
+                    .setUri(Uri.parse(mediaUri))
+                    .setClippingConfiguration(
+                        MediaItem.ClippingConfiguration.Builder()
+                            .setStartPositionMs(trimStart)
+                            .setEndPositionMs(trimEnd)
+                            .build()
+                    )
+                    .build()
 
                 player.setMediaItem(mediaItem)
                 player.prepare()
-                player.repeatMode = ExoPlayer.REPEAT_MODE_ONE
                 player.play()
                 player.addListener(object : Player.Listener {
 
@@ -563,20 +638,16 @@ class EditorActivity : AppCompatActivity() {
 
             if (videoPreview.visibility == View.VISIBLE) {
 
-                trimContainer.visibility = View.VISIBLE
-                timeText.visibility = View.VISIBLE
-                bottomToolbar.visibility = View.GONE
-                videoPreview.useController = true
-                videoPreview.showController()
+                player.pause()
 
-                filterRecyclerView.visibility = View.GONE
-                textToolbar.visibility = View.GONE
-                colorScroll.visibility = View.GONE
+                val intent = Intent(this, VideoTrimActivity::class.java)
+                intent.putExtra("VIDEO_URI", mediaUri)
+                trimLauncher.launch(intent)
 
                 return@setOnClickListener
             }
 
-            if (mediaUri == null) return@setOnClickListener
+            if (mediaUri.isEmpty()) return@setOnClickListener
 
             val sourceUri = Uri.parse(mediaUri)
             val destinationUri = Uri.fromFile(File(cacheDir, "cropped.jpg"))
