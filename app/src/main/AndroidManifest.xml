@@ -14,10 +14,13 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.FabCut">
         <activity
+            android:name=".VideoEditorActivity"
+            android:exported="false" />
+        <activity
             android:name=".VideoTrimActivity"
             android:exported="false" />
         <activity
-            android:name=".VideoEditorActivity"
+            android:name=".VideoTrimActivity"
             android:exported="false" />
         <activity
             android:name=".EditorActivity"
@@ -37,9 +40,6 @@
         <activity
             android:name=".MainActivity"
             android:exported="false" />
-        <activity
-            android:name=".VideoTrimActivity"
-            android:exported="false"/>
         <activity
             android:name=".SplashActivity"
             android:exported="true">

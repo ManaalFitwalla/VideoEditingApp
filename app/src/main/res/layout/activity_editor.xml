@@ -24,13 +24,15 @@
 
     <androidx.media3.ui.PlayerView
         android:id="@+id/videoPreview"
+
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:visibility="gone"
         android:background="#000"
+        android:layout_marginBottom="120dp"
 
 
-        app:use_controller="false"
+        app:use_controller="true"
         app:resize_mode="fit"
 
         app:layout_constraintTop_toTopOf="parent"
@@ -173,6 +175,90 @@
         app:layout_constraintEnd_toEndOf="parent"/>
 
     <!-- BOTTOM TOOLBAR -->
+
+    <TextView
+        android:id="@+id/timeText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        android:text="00:00 / 00:00"
+        android:textColor="#FFFFFF"
+        android:textSize="18sp"
+        app:layout_constraintBottom_toTopOf="@id/trimContainer"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <!-- Thumbnail Strip -->
+
+
+
+    <!-- Temporary SeekBar -->
+
+    <FrameLayout
+        android:id="@+id/trimContainer"
+        android:layout_width="0dp"
+        android:layout_height="90dp"
+        android:visibility="gone"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="25dp"
+        android:background="#222222"
+        app:layout_constraintBottom_toTopOf="@id/bottomToolbar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <!-- Thumbnail Strip -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/thumbRecycler"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:overScrollMode="never"
+            android:clipToPadding="false"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"/>
+
+        <View
+            android:id="@+id/playHead"
+            android:layout_width="2dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="center_horizontal"
+            android:background="@android:color/white"/>
+
+        <!-- Left Dark Area -->
+        <View
+            android:id="@+id/leftShade"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:background="#99000000"/>
+
+        <!-- Right Dark Area -->
+        <View
+            android:id="@+id/rightShade"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="end"
+            android:background="#99000000"/>
+
+        <!-- Left Handle -->
+        <ImageView
+            android:id="@+id/leftHandle"
+            android:layout_width="20dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="start"
+            android:background="@drawable/trim_handle"
+            android:elevation="10dp"/>
+
+        <!-- Right Handle -->
+        <ImageView
+            android:id="@+id/rightHandle"
+            android:layout_width="20dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="end"
+            android:background="@drawable/trim_handle"
+            android:elevation="10dp"/>
+
+    </FrameLayout>
+
 
     <HorizontalScrollView
         android:id="@+id/bottomToolbar"

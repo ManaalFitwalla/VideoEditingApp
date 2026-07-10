@@ -15,16 +15,18 @@ import android.view.View
 import android.widget.FrameLayout
 import androidx.media3.common.Player
 import android.widget.TextView
-import androidx.media3.transformer.Transformer
-import androidx.media3.transformer.EditedMediaItem
-import androidx.media3.transformer.ExportResult
-import androidx.media3.transformer.ExportException
 import java.io.File
-import android.widget.Toast
+import android.content.Intent
+import android.os.Handler
+import android.os.Looper
+import android.view.MotionEvent
+import androidx.media3.common.util.UnstableApi
 
-
+@UnstableApi
 class VideoTrimActivity : AppCompatActivity() {
 
+    private lateinit var selectionBorder: View
+    private lateinit var btnPlayPause: ImageView
     private lateinit var player: ExoPlayer
     private lateinit var playerView: PlayerView
 
@@ -50,27 +52,28 @@ class VideoTrimActivity : AppCompatActivity() {
     private var videoDuration = 0L
     private var trimStart = 0L
     private var trimEnd = 0L
+    private lateinit var playHead: View
 
     private var isDraggingLeft = false
     private var isDraggingRight = false
+    private var isPlaying = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.activity_video_trim)
 
-        btnDone = findViewById(R.id.btnDone)
-        android.widget.Toast.makeText(
-            this,
-            "VideoTrimActivity Opened",
-            android.widget.Toast.LENGTH_SHORT
-        ).show()
+        playHead = findViewById(R.id.playHead)
+
+        btnPlayPause = findViewById(R.id.btnPlayPause)
 
         playerView = findViewById(R.id.playerView)
         timeText = findViewById(R.id.timeText)
         trimContainer = findViewById(R.id.trimContainer)
+        leftShade = findViewById(R.id.leftShade)
+        rightShade = findViewById(R.id.rightShade)
+        selectionBorder = findViewById(R.id.selectionBorder)
 
-        thumbRecycler = findViewById(R.id.thumbRecycler)
 
         leftHandle = findViewById(R.id.leftHandle)
 
@@ -82,31 +85,151 @@ class VideoTrimActivity : AppCompatActivity() {
         btnDone = findViewById(R.id.btnDone)
         val outputFile = File(cacheDir, "trimmed_video.mp4")
         btnClose.setOnClickListener {
+
+            setResult(RESULT_CANCELED)
             finish()
         }
-
         btnDone.setOnClickListener {
 
-            Toast.makeText(
-                this,
-                "Export Started",
-                Toast.LENGTH_SHORT
-            ).show()
+            val data = Intent()
 
+            data.putExtra("TRIM_START", trimStart)
+            data.putExtra("TRIM_END", trimEnd)
+
+            setResult(RESULT_OK, data)
+            finish()
         }
         thumbRecycler.layoutManager =
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
 
+        thumbRecycler.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+
+            override fun onScrolled(
+                recyclerView: RecyclerView,
+                dx: Int,
+                dy: Int
+            ) {
+
+                val offset = recyclerView.computeHorizontalScrollOffset()
+                val range = recyclerView.computeHorizontalScrollRange()
+                val extent = recyclerView.computeHorizontalScrollExtent()
+
+                val progress =
+                    offset.toFloat() / (range - extent).coerceAtLeast(1)
+
+                val position =
+                    (progress * videoDuration).toLong()
+
+                player.seekTo(position)
+            }
+        })
+
         player = ExoPlayer.Builder(this).build()
 
         playerView.player = player
+
+        btnPlayPause.setOnClickListener {
+
+            if (isPlaying) {
+
+                player.pause()
+                btnPlayPause.setImageResource(android.R.drawable.ic_media_play)
+                isPlaying = false
+
+            } else {
+
+                player.seekTo(trimStart)
+                player.play()
+
+                btnPlayPause.setImageResource(android.R.drawable.ic_media_pause)
+                isPlaying = true
+            }
+        }
+        playHead.setOnTouchListener { _, event ->
+
+            when (event.action) {
+
+                MotionEvent.ACTION_MOVE -> {
+
+                    var x = event.rawX
+
+                    if (x < leftHandle.x)
+                        x = leftHandle.x
+
+                    if (x > rightHandle.x)
+                        x = rightHandle.x
+
+                    playHead.x = x
+
+                    val time =
+                        (
+                                playHead.x /
+                                        trimContainer.width *
+                                        videoDuration
+                                ).toLong()
+
+                    player.seekTo(time)
+                }
+            }
+
+            true
+        }
+
+        playerView.useController = false
 
         val uri = Uri.parse(intent.getStringExtra("VIDEO_URI"))
 
         player.setMediaItem(MediaItem.fromUri(uri))
 
         player.prepare()
-        player.play()
+
+        if (videoDuration > 0) {
+            val progress =
+                player.currentPosition.toFloat() / videoDuration
+
+            val x = progress * trimContainer.width
+
+            playHead.x = x.coerceIn(
+                leftHandle.x + leftHandle.width / 2f,
+                rightHandle.x + rightHandle.width / 2f
+            )
+        }
+        val handler = Handler(Looper.getMainLooper())
+
+        handler.post(object : Runnable {
+
+            override fun run() {
+
+                if (::player.isInitialized) {
+
+                    val progress =
+                        player.currentPosition.toFloat() / videoDuration
+
+                    val x = progress * trimContainer.width
+
+                            playHead.x = x.coerceIn(
+                        leftHandle.x,
+                        rightHandle.x
+                    )
+                    if (player.currentPosition >= trimEnd) {
+
+                        player.pause()
+                        player.seekTo(trimStart)
+
+                        playHead.x = leftHandle.x
+
+                        btnPlayPause.setImageResource(android.R.drawable.ic_media_play)
+                        isPlaying = false
+                    }
+
+                }
+
+                handler.postDelayed(this, 16)
+            }
+
+        })
+        player.pause()      // Don't autoplay
+        player.seekTo(0)
         player.addListener(object : Player.Listener {
 
             override fun onPlaybackStateChanged(state: Int) {
@@ -115,83 +238,146 @@ class VideoTrimActivity : AppCompatActivity() {
 
                     videoDuration = player.duration
 
-                    trimStart = 0
-                    trimEnd = videoDuration
+                    if (trimEnd == 0L) {
+                        trimStart = 0L
+                        trimEnd = videoDuration
+                    }
 
                     timeText.text =
-                        "0s - ${videoDuration / 1000}s"                }
+                        "${trimStart / 1000}s - ${trimEnd / 1000}s"
+                }
             }
         })
         generateThumbnails(uri)
-        player.addListener(object : Player.Listener {
+        leftHandle.bringToFront()
+        rightHandle.bringToFront()
 
-            override fun onEvents(player: Player, events: Player.Events) {
+        selectionBorder.bringToFront()
+        leftHandle.bringToFront()
+        rightHandle.bringToFront()
+        playHead.bringToFront()
 
-                if (player.currentPosition >= trimEnd && trimEnd > 0) {
+        leftHandle.setOnTouchListener { _, event ->
+
+
+            when (event.action) {
+
+                MotionEvent.ACTION_UP -> {
+
+                    player.pause()
                     player.seekTo(trimStart)
                 }
-            }
-        })
-        leftHandle.setOnTouchListener { v, event ->
 
-            when(event.action){
+                MotionEvent.ACTION_MOVE -> {
 
-                android.view.MotionEvent.ACTION_MOVE->{
+                    val location = IntArray(2)
+                    trimContainer.getLocationOnScreen(location)
 
-                    var newX = event.rawX
+                    var newX = event.rawX - location[0] - leftHandle.width / 2f
 
-                    if(newX<0)
-                        newX=0f
+                    // Don't go outside the timeline
+                    if (newX < 0f) {
+                        newX = 0f
+                    }
 
-                    if(newX>rightHandle.x-120)
-                        newX=rightHandle.x-120
+                    // Don't cross the right handle
+                    val minGap =
+                        trimContainer.width * 1000f / videoDuration
 
-                    leftHandle.x=newX
-                    trimStart =
-                        (
-                                leftHandle.x/
-                                        trimContainer.width*
-                                        videoDuration
-                                ).toLong()
+                    val maxX =
+                        rightHandle.x - minGap
+
+                    if (newX > maxX) {
+                        newX = maxX
+                    }
+
+                    leftHandle.x = newX
+
+
+                    updateShades()
+
+                    selectionBorder.invalidate()
+
+                    trimStart = (
+                            leftHandle.x /
+                                    trimContainer.width.toFloat() *
+                                    videoDuration
+                            ).toLong()
+
+                    // Show the frame at the selected start time
+                    player.seekTo(trimStart)
 
                     timeText.text =
-                        "${trimStart/1000}s - ${trimEnd/1000}s"
-
+                        "${trimStart / 1000}s - ${trimEnd / 1000}s"
                 }
 
+                MotionEvent.ACTION_UP -> {
+                    // Keep the video paused
+                    player.pause()
+                    player.seekTo(trimStart)
+                }
             }
 
             true
         }
-        rightHandle.setOnTouchListener { v, event ->
+        rightHandle.setOnTouchListener { _, event ->
 
-            when(event.action){
+            when (event.action) {
 
-                android.view.MotionEvent.ACTION_MOVE->{
+                MotionEvent.ACTION_UP -> {
 
-                    var newX = event.rawX
-
-                    if(newX<leftHandle.x+120)
-                        newX=leftHandle.x+120
-
-                    if(newX>trimContainer.width-rightHandle.width)
-                        newX=(trimContainer.width-rightHandle.width).toFloat()
-
-                    rightHandle.x=newX
-                    trimEnd =
-                        (
-                                rightHandle.x/
-                                        trimContainer.width*
-                                        videoDuration
-                                ).toLong()
-
-                    timeText.text =
-                        "${trimStart/1000}s - ${trimEnd/1000}s"
-                    player.seekTo(trimStart)
+                    player.pause()
                     player.seekTo(trimEnd)
-
                 }
 
+                MotionEvent.ACTION_MOVE -> {
+
+                    val location = IntArray(2)
+                    trimContainer.getLocationOnScreen(location)
+
+                    var newX = event.rawX - location[0] - rightHandle.width / 2f
+
+                    // Prevent crossing the left handle
+                    val minGap =
+                        trimContainer.width * 1000f / videoDuration
+
+                    if (newX < leftHandle.x + minGap) {
+                        newX = leftHandle.x + minGap
+                    }
+
+                    // Prevent going outside the timeline
+                    val maxX = (trimContainer.width - rightHandle.width).toFloat()
+                    if (newX > maxX) {
+                        newX = maxX
+                    }
+
+                    rightHandle.x = newX
+
+                    updateShades()
+
+                    trimEnd = (
+                            (rightHandle.x + rightHandle.width) /
+                                    trimContainer.width.toFloat() *
+                                    videoDuration
+                            ).toLong()
+
+                    if (trimEnd > videoDuration) {
+                        trimEnd = videoDuration
+                    }
+
+                    // Preview the selected end frame
+                    player.seekTo(trimEnd)
+                    playHead.x = rightHandle.x
+
+                    timeText.text =
+                        "${trimStart / 1000}s - ${trimEnd / 1000}s"
+                }
+
+                MotionEvent.ACTION_UP -> {
+                    // Stay paused and show the selected frame
+                    player.pause()
+                    player.seekTo(trimEnd)
+                }
             }
 
             true
@@ -205,8 +391,15 @@ class VideoTrimActivity : AppCompatActivity() {
             leftHandle.x = startX
 
             rightHandle.x = endX
+            updateShades()
+            selectionBorder.bringToFront()
+            leftHandle.bringToFront()
+            rightHandle.bringToFront()
+            playHead.bringToFront()
         }
-}
+
+    }
+
 
     private fun generateThumbnails(videoUri: Uri) {
 
@@ -250,5 +443,26 @@ class VideoTrimActivity : AppCompatActivity() {
     override fun onStop() {
         super.onStop()
         player.release()
+    }
+
+    private fun updateShades() {
+
+        // Left dark area
+        leftShade.x = 0f
+        leftShade.layoutParams.width = leftHandle.x.toInt()
+
+        // Right dark area
+        rightShade.x = rightHandle.x + rightHandle.width
+        rightShade.layoutParams.width =
+            (trimContainer.width - rightShade.x).toInt()
+
+        // White selection border
+        selectionBorder.x = leftHandle.x
+        selectionBorder.layoutParams.width =
+            (rightHandle.x - leftHandle.x + rightHandle.width).toInt()
+
+        leftShade.requestLayout()
+        rightShade.requestLayout()
+        selectionBorder.requestLayout()
     }
 }
