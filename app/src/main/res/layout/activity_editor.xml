@@ -22,21 +22,8 @@
         app:layout_constraintEnd_toEndOf="parent"/>
 
 
-    <androidx.media3.ui.PlayerView
-        android:id="@+id/videoPreview"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="#000"
-        android:visibility="gone"
-        app:use_controller="true"
-        app:resize_mode="zoom"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/filterRecyclerView"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
-
-    <android.opengl.GLSurfaceView
-        android:id="@+id/glVideoView"
+    <com.daasuu.gpuv.player.GPUPlayerView
+        android:id="@+id/gpuVideoView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:visibility="gone"

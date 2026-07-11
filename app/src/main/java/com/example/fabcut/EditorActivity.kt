@@ -40,14 +40,15 @@ import androidx.media3.exoplayer.ExoPlayer
 import android.widget.FrameLayout
 import android.opengl.GLSurfaceView
 import android.widget.SeekBar
-
+import com.daasuu.gpuv.player.GPUPlayerView
 
 class EditorActivity : AppCompatActivity() {
 
+    private lateinit var gpuVideoEditor: GpuVideoEditor
 
     private lateinit var btnSave: MaterialCardView
     private var selectedVideoFilter = "Original"
-    private lateinit var glVideoView: GLSurfaceView
+    private lateinit var gpuVideoView: GPUPlayerView
     private lateinit var imgCropCut: ImageView
     private lateinit var txtCropCut: TextView
 
@@ -294,14 +295,16 @@ class EditorActivity : AppCompatActivity() {
             v.setPadding(bars.left, bars.top, bars.right, bars.bottom)
             insets
         }
+
+        gpuVideoEditor = GpuVideoEditor(this)
         imgCropCut = findViewById(R.id.imgCropCut)
 
 
         txtCropCut = findViewById(R.id.txtCropCut)
 
         imagePreview = findViewById(R.id.imagePreview)
-        videoPreview = findViewById(R.id.videoPreview)
-        glVideoView = findViewById(R.id.glVideoView)
+        gpuVideoView = findViewById(R.id.gpuVideoView)
+
         txtOverlay = findViewById(R.id.txtOverlay)
 
         deleteLayout = findViewById(R.id.deleteLayout)

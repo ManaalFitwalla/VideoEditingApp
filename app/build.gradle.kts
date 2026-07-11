@@ -40,14 +40,14 @@ dependencies {
 
     implementation("androidx.media3:media3-transformer:1.7.1")
     implementation(libs.androidx.activity.ktx)
-    implementation("com.github.MasayukiSuda:GPUVideo-android:v0.1.2")
+    implementation("com.github.MasayukiSuda:GPUVideo-android:v0.1.1")
     implementation("androidx.media3:media3-effect:1.7.1")
     implementation("androidx.media3:media3-exoplayer:1.7.1")
     implementation("androidx.media3:media3-ui:1.7.1")
     implementation("com.github.bumptech.glide:glide:4.16.0")
     implementation("jp.wasabeef:glide-transformations:4.3.0")
     implementation("com.github.yalantis:ucrop:2.2.11")
-
+    implementation("com.google.android.exoplayer:exoplayer:2.18.7")
     implementation("androidx.recyclerview:recyclerview:1.4.0")
 
     implementation(libs.androidx.core.ktx)
