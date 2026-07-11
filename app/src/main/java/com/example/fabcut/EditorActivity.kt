@@ -1,5 +1,4 @@
 package com.example.fabcut
-
 import android.widget.Toast
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.common.Player
@@ -39,11 +38,21 @@ import androidx.media3.ui.PlayerView
 import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
 import android.widget.FrameLayout
+import android.opengl.GLSurfaceView
+import android.widget.SeekBar
+import com.daasuu.gpuv.player.GPUPlayerView
+
 class EditorActivity : AppCompatActivity() {
 
+    private lateinit var gpuVideoEditor: GpuVideoEditor
+
+    private lateinit var btnSave: MaterialCardView
+    private var selectedVideoFilter = "Original"
+    private lateinit var gpuVideoView: GPUPlayerView
     private lateinit var imgCropCut: ImageView
     private lateinit var txtCropCut: TextView
 
+    private lateinit var brightnessSeekBar: SeekBar
     private lateinit var imagePreview: ImageView
     private lateinit var videoPreview: PlayerView
     private lateinit var bottomToolbar: HorizontalScrollView
@@ -140,12 +149,11 @@ class EditorActivity : AppCompatActivity() {
             }
 
         }
-    @UnstableApi
-    private fun applyVideoFilter(filter: RgbFilter) {
 
-        player.setVideoEffects(
-            listOf(filter)
-        )
+    @UnstableApi
+    private fun applyVideoFilter(effect: androidx.media3.common.Effect) {
+
+        player.setVideoEffects(listOf(effect))
 
         player.seekTo(player.currentPosition)
     }
@@ -173,6 +181,58 @@ class EditorActivity : AppCompatActivity() {
         }
     }
 
+    @UnstableApi
+    private fun previewSelectedFilter() {
+
+        when (selectedVideoFilter) {
+
+            "Original" -> {
+                player.setVideoEffects(emptyList())
+            }
+
+            "Bright" -> {
+                player.setVideoEffects(
+                    listOf(
+                        RgbFilter.createInvertedFilter() // temporary test
+                    )
+                )
+            }
+
+            "Cool" -> {
+                player.setVideoEffects(
+                    listOf(
+                        RgbFilter.createGrayscaleFilter()
+                    )
+                )
+            }
+
+            "Warm" -> {
+                player.setVideoEffects(
+                    listOf(
+                        RgbFilter.createGrayscaleFilter()
+                    )
+                )
+            }
+
+            "Vintage" -> {
+                player.setVideoEffects(
+                    listOf(
+                        RgbFilter.createGrayscaleFilter()
+                    )
+                )
+            }
+
+            "B&W" -> {
+                player.setVideoEffects(
+                    listOf(
+                        RgbFilter.createGrayscaleFilter()
+                    )
+                )
+            }
+        }
+
+        player.seekTo(player.currentPosition)
+    }
     private val colors = arrayOf(
         Color.WHITE,
         Color.BLACK,
@@ -235,12 +295,16 @@ class EditorActivity : AppCompatActivity() {
             v.setPadding(bars.left, bars.top, bars.right, bars.bottom)
             insets
         }
+
+        gpuVideoEditor = GpuVideoEditor(this)
         imgCropCut = findViewById(R.id.imgCropCut)
+
 
         txtCropCut = findViewById(R.id.txtCropCut)
 
         imagePreview = findViewById(R.id.imagePreview)
-        videoPreview = findViewById(R.id.videoPreview)
+        gpuVideoView = findViewById(R.id.gpuVideoView)
+
         txtOverlay = findViewById(R.id.txtOverlay)
 
         deleteLayout = findViewById(R.id.deleteLayout)
@@ -268,6 +332,10 @@ class EditorActivity : AppCompatActivity() {
 
         leftShade = findViewById(R.id.leftShade)
         rightShade = findViewById(R.id.rightShade)
+
+        brightnessSeekBar = findViewById(R.id.brightnessSeekBar)
+
+        videoPreview.findViewById<View>(androidx.media3.ui.R.id.exo_progress)?.visibility = View.GONE
 
         thumbRecycler.layoutManager =
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
@@ -297,6 +365,23 @@ class EditorActivity : AppCompatActivity() {
         btnUnderline = findViewById(R.id.btnUnderline)
         player = ExoPlayer.Builder(this).build()
         videoPreview.player = player
+
+        Toast.makeText(
+            this,
+            "Media3 Player Ready",
+            Toast.LENGTH_SHORT
+        ).show()
+
+        videoPreview.setShowFastForwardButton(false)
+        videoPreview.setShowRewindButton(false)
+        videoPreview.setShowNextButton(false)
+        videoPreview.setShowPreviousButton(false)
+        videoPreview.setShowShuffleButton(false)
+        videoPreview.setShowSubtitleButton(false)
+        videoPreview.setShowVrButton(false)
+
+        videoPreview.controllerShowTimeoutMs = 1500
+        videoPreview.controllerAutoShow = true
 
         filterRecyclerView.layoutManager =
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
@@ -390,17 +475,14 @@ class EditorActivity : AppCompatActivity() {
                     filterRecyclerView.adapter =
                         FilterAdapter(filters) { filter ->
 
-                            when (filter.name) {
+                            selectedVideoFilter = filter.name
+                            previewSelectedFilter()
 
-                                "Original" -> {
-                                    player.setVideoEffects(emptyList())
-                                }
-
-                                "B&W" -> {
-                                    Toast.makeText(this, "B&W clicked", Toast.LENGTH_SHORT).show()
-                                    applyVideoFilter(RgbFilter.createGrayscaleFilter())
-                                }
-                            }
+                            Toast.makeText(
+                                this,
+                                "Selected: $selectedVideoFilter",
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
                 }
 
@@ -441,7 +523,7 @@ class EditorActivity : AppCompatActivity() {
 
                             filterRecyclerView.adapter =
                                 FilterAdapter(filters) { filter ->
-
+                                    selectedVideoFilter = filter.name
                                     when (filter.name) {
 
                                         "Original" ->
@@ -771,7 +853,15 @@ class EditorActivity : AppCompatActivity() {
         }
 
         btnAdjust.setOnClickListener {
+
             filterRecyclerView.visibility = View.GONE
+
+            brightnessSeekBar.visibility =
+                if (brightnessSeekBar.visibility == View.VISIBLE)
+                    View.GONE
+                else
+                    View.VISIBLE
+
         }
         // ==========================
         // DEFAULT TEXT STYLE
@@ -790,10 +880,11 @@ class EditorActivity : AppCompatActivity() {
         }
 
     } // End of onCreate()
+
     override fun onStop() {
         super.onStop()
 
-       // player.release()
+        // player.release()
     }
     override fun onDestroy() {
         super.onDestroy()
