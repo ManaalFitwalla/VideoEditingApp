@@ -47,6 +47,7 @@ class EditorActivity : AppCompatActivity() {
 
 
     private lateinit var btnSave: MaterialCardView
+
     private var selectedVideoFilter = "Original"
     private lateinit var imgCropCut: ImageView
     private lateinit var txtCropCut: TextView
