@@ -45,7 +45,7 @@ dependencies {
     implementation("com.github.bumptech.glide:glide:4.16.0")
     implementation("jp.wasabeef:glide-transformations:4.3.0")
     implementation("com.github.yalantis:ucrop:2.2.11")
-
+    implementation("com.google.android.exoplayer:exoplayer:2.18.7")
     implementation("androidx.recyclerview:recyclerview:1.4.0")
 
     implementation(libs.androidx.core.ktx)
