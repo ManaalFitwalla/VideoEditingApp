@@ -12,6 +12,7 @@
 
     <ImageView
         android:id="@+id/imagePreview"
+
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:background="#000"
@@ -30,22 +31,11 @@
         android:visibility="gone"
         app:use_controller="true"
         app:resize_mode="zoom"
+        app:surface_type="texture_view"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toTopOf="@id/filterRecyclerView"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
-
-    <android.opengl.GLSurfaceView
-        android:id="@+id/glVideoView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:visibility="gone"
-        android:background="#000"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/filterRecyclerView"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"/>
-
 
     <!-- DRAGGABLE TEXT -->
 
@@ -338,14 +328,14 @@
                         android:layout_width="28dp"
                         android:layout_height="28dp"
                         android:src="@drawable/ic_text"
-                        app:tint="#FFFFFF"/>
+                        app:tint="#FFFFFF" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Text"
                         android:textColor="#FFFFFF"
-                        android:textStyle="bold"/>
+                        android:textStyle="bold" />
 
                 </LinearLayout>
 
@@ -466,26 +456,26 @@
                 app:cardCornerRadius="16dp"
                 app:cardBackgroundColor="#2A2A2A"/>
 
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:gravity="center"
-                    android:orientation="vertical">
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:orientation="vertical">
 
-                    <ImageView
-                        android:layout_width="28dp"
-                        android:layout_height="28dp"
-                        android:src="@drawable/ic_adjust"
-                        app:tint="#FFFFFF"/>
+                <ImageView
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
+                    android:src="@drawable/ic_adjust"
+                    app:tint="#FFFFFF"/>
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Brightness"
-                        android:textColor="#FFFFFF"
-                        android:textStyle="bold"/>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Brightness"
+                    android:textColor="#FFFFFF"
+                    android:textStyle="bold"/>
 
-                </LinearLayout>
+            </LinearLayout>
 
 
         </LinearLayout>

@@ -40,14 +40,15 @@ import androidx.media3.exoplayer.ExoPlayer
 import android.widget.FrameLayout
 import android.opengl.GLSurfaceView
 import android.widget.SeekBar
+import androidx.media3.exoplayer.DefaultRenderersFactory
 
 
 class EditorActivity : AppCompatActivity() {
 
 
     private lateinit var btnSave: MaterialCardView
+
     private var selectedVideoFilter = "Original"
-    private lateinit var glVideoView: GLSurfaceView
     private lateinit var imgCropCut: ImageView
     private lateinit var txtCropCut: TextView
 
@@ -301,7 +302,6 @@ class EditorActivity : AppCompatActivity() {
 
         imagePreview = findViewById(R.id.imagePreview)
         videoPreview = findViewById(R.id.videoPreview)
-        glVideoView = findViewById(R.id.glVideoView)
         txtOverlay = findViewById(R.id.txtOverlay)
 
         deleteLayout = findViewById(R.id.deleteLayout)
@@ -360,8 +360,12 @@ class EditorActivity : AppCompatActivity() {
         })
         btnItalic = findViewById(R.id.btnItalic)
         btnUnderline = findViewById(R.id.btnUnderline)
-        player = ExoPlayer.Builder(this).build()
+
+        player = ExoPlayer.Builder(this)
+            .build()
         videoPreview.player = player
+
+        player.setVideoEffects(emptyList())
 
         Toast.makeText(
             this,
