@@ -1,50 +1,47 @@
 package com.example.fabcut
-import android.widget.Toast
-import androidx.media3.common.util.UnstableApi
-import androidx.media3.common.Player
-import android.content.Intent
-import android.media.MediaMetadataRetriever
-import androidx.media3.effect.RgbFilter
+
 import android.app.AlertDialog
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.drawable.Drawable
+import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Bundle
 import android.view.MotionEvent
 import android.view.ScaleGestureDetector
 import android.view.View
 import android.widget.EditText
+import android.widget.FrameLayout
 import android.widget.HorizontalScrollView
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.SeekBar
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.media3.common.MediaItem
+import androidx.media3.common.Player
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.effect.RgbFilter
+import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.ui.PlayerView
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
 import com.google.android.material.card.MaterialCardView
+import com.yalantis.ucrop.UCrop
+import java.io.File
 import kotlin.math.pow
 import kotlin.math.sqrt
-import androidx.activity.result.contract.ActivityResultContracts
-import java.io.File
-import com.yalantis.ucrop.UCrop
-import androidx.media3.ui.PlayerView
-import androidx.media3.common.MediaItem
-import androidx.media3.exoplayer.ExoPlayer
-import android.widget.FrameLayout
-import android.opengl.GLSurfaceView
-import android.widget.SeekBar
-import androidx.media3.exoplayer.DefaultRenderersFactory
-
 
 class EditorActivity : AppCompatActivity() {
-
 
     private lateinit var btnSave: MaterialCardView
 
@@ -103,9 +100,9 @@ class EditorActivity : AppCompatActivity() {
     private var dX = 0f
     private var dY = 0f
     private var lastClickTime = 0L
+
     private val trimLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-
             if (result.resultCode == RESULT_OK) {
                 trimStart = result.data?.getLongExtra("TRIM_START", 0L) ?: 0L
                 trimEnd = result.data?.getLongExtra("TRIM_END", player.duration) ?: player.duration
@@ -125,114 +122,106 @@ class EditorActivity : AppCompatActivity() {
                 player.play()
 
                 timeText.text = "${trimStart / 1000}s - ${trimEnd / 1000}s"
-
-
-            }
-            else {
-
+            } else {
                 player.play()
-
             }
         }
 
     private lateinit var scaleDetector: ScaleGestureDetector
     private val cropLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-
             if (result.resultCode == RESULT_OK) {
-
                 val resultUri = UCrop.getOutput(result.data!!)
-
                 if (resultUri != null) {
                     imagePreview.setImageURI(resultUri)
                 }
             }
-
         }
 
     @UnstableApi
     private fun applyVideoFilter(effect: androidx.media3.common.Effect) {
-
         player.setVideoEffects(listOf(effect))
-
         player.seekTo(player.currentPosition)
     }
+
     private fun getVideoThumbnail(videoUri: Uri): Bitmap? {
-
         return try {
-
             val retriever = MediaMetadataRetriever()
-
             retriever.setDataSource(this, videoUri)
-
             val bitmap = retriever.getFrameAtTime(
                 0,
                 MediaMetadataRetriever.OPTION_CLOSEST_SYNC
             )
-
             retriever.release()
-
             bitmap
-
         } catch (e: Exception) {
-
             e.printStackTrace()
             null
         }
     }
 
+    // FIXED: Real Video Filters for Media3
     @UnstableApi
     private fun previewSelectedFilter() {
+        try {
+            when (selectedVideoFilter) {
+                "Original" -> {
+                    player.setVideoEffects(emptyList())
+                }
 
-        when (selectedVideoFilter) {
-
-            "Original" -> {
-                player.setVideoEffects(emptyList())
-            }
-
-            "Bright" -> {
-                player.setVideoEffects(
-                    listOf(
-                        RgbFilter.createInvertedFilter() // temporary test
+                "Bright" -> {
+                    // 4x4 Matrix (16 floats) - Scale RGB up by 25%
+                    val brightMatrix = floatArrayOf(
+                        1.25f, 0f, 0f, 0f,
+                        0f, 1.25f, 0f, 0f,
+                        0f, 0f, 1.25f, 0f,
+                        0f, 0f, 0f, 1f
                     )
-                )
-            }
+                    player.setVideoEffects(listOf(androidx.media3.effect.RgbMatrix { _, _ -> brightMatrix }))
+                }
 
-            "Cool" -> {
-                player.setVideoEffects(
-                    listOf(
-                        RgbFilter.createGrayscaleFilter()
+                "Cool" -> {
+                    // Boost Blue (1.3), slightly lower Red (0.85)
+                    val coolMatrix = floatArrayOf(
+                        0.85f, 0f, 0f, 0f,
+                        0f, 1.0f, 0f, 0f,
+                        0f, 0f, 1.30f, 0f,
+                        0f, 0f, 0f, 1f
                     )
-                )
-            }
+                    player.setVideoEffects(listOf(androidx.media3.effect.RgbMatrix { _, _ -> coolMatrix }))
+                }
 
-            "Warm" -> {
-                player.setVideoEffects(
-                    listOf(
-                        RgbFilter.createGrayscaleFilter()
+                "Warm" -> {
+                    // Boost Red (1.25) & Green (1.1), reduce Blue (0.8)
+                    val warmMatrix = floatArrayOf(
+                        1.25f, 0f, 0f, 0f,
+                        0f, 1.10f, 0f, 0f,
+                        0f, 0f, 0.80f, 0f,
+                        0f, 0f, 0f, 1f
                     )
-                )
-            }
+                    player.setVideoEffects(listOf(androidx.media3.effect.RgbMatrix { _, _ -> warmMatrix }))
+                }
 
-            "Vintage" -> {
-                player.setVideoEffects(
-                    listOf(
-                        RgbFilter.createGrayscaleFilter()
+                "Vintage" -> {
+                    // Sepia / Vintage RGB mix matrix
+                    val vintageMatrix = floatArrayOf(
+                        0.90f, 0.10f, 0.10f, 0f,
+                        0.10f, 0.80f, 0.10f, 0f,
+                        0.10f, 0.10f, 0.60f, 0f,
+                        0f, 0f, 0f, 1f
                     )
-                )
-            }
+                    player.setVideoEffects(listOf(androidx.media3.effect.RgbMatrix { _, _ -> vintageMatrix }))
+                }
 
-            "B&W" -> {
-                player.setVideoEffects(
-                    listOf(
-                        RgbFilter.createGrayscaleFilter()
-                    )
-                )
+                "B&W" -> {
+                    player.setVideoEffects(listOf(RgbFilter.createGrayscaleFilter()))
+                }
             }
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
-
-        player.seekTo(player.currentPosition)
     }
+
     private val colors = arrayOf(
         Color.WHITE,
         Color.BLACK,
@@ -245,59 +234,46 @@ class EditorActivity : AppCompatActivity() {
         Color.parseColor("#FF9800"),
         Color.parseColor("#9C27B0")
     )
+
     private fun generateThumbnails(videoUri: Uri) {
-
         val retriever = MediaMetadataRetriever()
-
         retriever.setDataSource(this, videoUri)
 
-        val duration =
-            retriever.extractMetadata(
-                MediaMetadataRetriever.METADATA_KEY_DURATION
-            )?.toLong() ?: 0L
+        val duration = retriever.extractMetadata(
+            MediaMetadataRetriever.METADATA_KEY_DURATION
+        )?.toLong() ?: 0L
 
         thumbnailList.clear()
-
         val frameCount = 10
 
         for (i in 0 until frameCount) {
-
-            val timeUs =
-                (duration * 1000 / frameCount) * i
-
-            val bitmap =
-                retriever.getFrameAtTime(
-                    timeUs,
-                    MediaMetadataRetriever.OPTION_CLOSEST_SYNC
-                )
-
+            val timeUs = (duration * 1000 / frameCount) * i
+            val bitmap = retriever.getFrameAtTime(
+                timeUs,
+                MediaMetadataRetriever.OPTION_CLOSEST_SYNC
+            )
             bitmap?.let {
                 thumbnailList.add(it)
             }
         }
 
         retriever.release()
-
         thumbRecycler.adapter = ThumbnailAdapter(thumbnailList)
     }
+
     @UnstableApi
     override fun onCreate(savedInstanceState: Bundle?) {
-
-
-
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_editor)
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
-
             val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(bars.left, bars.top, bars.right, bars.bottom)
             insets
         }
+
         imgCropCut = findViewById(R.id.imgCropCut)
-
-
         txtCropCut = findViewById(R.id.txtCropCut)
 
         imagePreview = findViewById(R.id.imagePreview)
@@ -338,40 +314,28 @@ class EditorActivity : AppCompatActivity() {
             LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
 
         thumbRecycler.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-
-            override fun onScrolled(
-                recyclerView: RecyclerView,
-                dx: Int,
-                dy: Int
-            ) {
-
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 val offset = recyclerView.computeHorizontalScrollOffset()
                 val range = recyclerView.computeHorizontalScrollRange()
                 val extent = recyclerView.computeHorizontalScrollExtent()
 
-                val progress =
-                    offset.toFloat() / (range - extent).coerceAtLeast(1)
-
-                val position =
-                    (progress * videoDuration).toLong()
-
+                val progress = offset.toFloat() / (range - extent).coerceAtLeast(1)
+                val position = (progress * videoDuration).toLong()
                 player.seekTo(position)
             }
         })
+
         btnItalic = findViewById(R.id.btnItalic)
         btnUnderline = findViewById(R.id.btnUnderline)
 
-        player = ExoPlayer.Builder(this)
-            .build()
+        // Initialize ExoPlayer
+        player = ExoPlayer.Builder(this).build()
         videoPreview.player = player
 
-        player.setVideoEffects(emptyList())
+        // FIXED: Set player repeat mode so video loops continuously!
+        player.repeatMode = Player.REPEAT_MODE_ALL
 
-        Toast.makeText(
-            this,
-            "Media3 Player Ready",
-            Toast.LENGTH_SHORT
-        ).show()
+        player.setVideoEffects(emptyList())
 
         videoPreview.setShowFastForwardButton(false)
         videoPreview.setShowRewindButton(false)
@@ -391,18 +355,11 @@ class EditorActivity : AppCompatActivity() {
         scaleDetector = ScaleGestureDetector(
             this,
             object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
-
                 override fun onScale(detector: ScaleGestureDetector): Boolean {
-
-                    var size =
-                        txtOverlay.textSize /
-                                resources.displayMetrics.scaledDensity
-
+                    var size = txtOverlay.textSize / resources.displayMetrics.scaledDensity
                     size *= detector.scaleFactor
                     size = size.coerceIn(18f, 100f)
                     txtOverlay.textSize = size
-
-
                     return true
                 }
             }
@@ -420,159 +377,97 @@ class EditorActivity : AppCompatActivity() {
         }
 
         if (isVideo) {
-            txtCropCut.text = "Trim"
+            imagePreview.visibility = View.GONE
+            videoPreview.visibility = View.VISIBLE
+
+            val mediaItem = MediaItem.fromUri(Uri.parse(mediaUri))
+
+            player.setMediaItem(mediaItem)
+            player.prepare()
+            player.play()
+
+            player.addListener(object : Player.Listener {
+                override fun onPlaybackStateChanged(state: Int) {
+                    if (state == Player.STATE_READY) {
+                        videoDuration = player.duration
+                        trimStart = 0
+                        trimEnd = videoDuration
+                        timeText.text = "0s - ${videoDuration / 1000}s"
+                        generateThumbnails(Uri.parse(mediaUri))
+                    }
+                }
+            })
+
+            val thumb = getVideoThumbnail(Uri.parse(mediaUri))
+
+            if (thumb != null) {
+                val smallThumb = Bitmap.createScaledBitmap(thumb, 150, 150, true)
+
+                val filters = listOf(
+                    FilterItem("Original", smallThumb),
+                    FilterItem("Bright", ImageFilters.bright(smallThumb)),
+                    FilterItem("Cool", ImageFilters.cool(smallThumb)),
+                    FilterItem("Warm", ImageFilters.warm(smallThumb)),
+                    FilterItem("Vintage", ImageFilters.vintage(smallThumb)),
+                    FilterItem("B&W", ImageFilters.blackAndWhite(smallThumb))
+                )
+
+                filterRecyclerView.adapter = FilterAdapter(filters) { filter ->
+                    selectedVideoFilter = filter.name
+                    previewSelectedFilter()
+                }
+            }
+
         } else {
-            txtCropCut.text = "Crop"
-        }
-        run {
+            videoPreview.visibility = View.GONE
+            imagePreview.visibility = View.VISIBLE
 
-            if (isVideo) {
+            Glide.with(this)
+                .asBitmap()
+                .load(Uri.parse(mediaUri))
+                .into(object : CustomTarget<Bitmap>() {
+                    override fun onResourceReady(
+                        resource: Bitmap,
+                        transition: Transition<in Bitmap>?
+                    ) {
+                        originalBitmap = resource
+                        imagePreview.setImageBitmap(resource)
 
-                imagePreview.visibility = View.GONE
-                videoPreview.visibility = View.VISIBLE
+                        val thumb = Bitmap.createScaledBitmap(resource, 150, 150, true)
 
-                val mediaItem = MediaItem.fromUri(Uri.parse(mediaUri))
+                        val filters = listOf(
+                            FilterItem("Original", thumb),
+                            FilterItem("Bright", ImageFilters.bright(thumb)),
+                            FilterItem("Cool", ImageFilters.cool(thumb)),
+                            FilterItem("Warm", ImageFilters.warm(thumb)),
+                            FilterItem("Vintage", ImageFilters.vintage(thumb)),
+                            FilterItem("B&W", ImageFilters.blackAndWhite(thumb))
+                        )
 
-                player.setMediaItem(mediaItem)
-                player.prepare()
-                player.play()
-                player.addListener(object : Player.Listener {
-
-                    override fun onPlaybackStateChanged(state: Int) {
-
-                        if (state == Player.STATE_READY) {
-
-                            videoDuration = player.duration
-
-                            trimStart = 0
-                            trimEnd = videoDuration
-
-                            timeText.text = "0s - ${videoDuration / 1000}s"
-
-                            generateThumbnails(Uri.parse(mediaUri))
+                        // FIXED: Applies real distinct filter functions for images!
+                        filterRecyclerView.adapter = FilterAdapter(filters) { filter ->
+                            selectedVideoFilter = filter.name
+                            when (filter.name) {
+                                "Original" -> imagePreview.setImageBitmap(resource)
+                                "Bright" -> imagePreview.setImageBitmap(ImageFilters.bright(resource))
+                                "Cool" -> imagePreview.setImageBitmap(ImageFilters.cool(resource))
+                                "Warm" -> imagePreview.setImageBitmap(ImageFilters.warm(resource))
+                                "Vintage" -> imagePreview.setImageBitmap(ImageFilters.vintage(resource))
+                                "B&W" -> imagePreview.setImageBitmap(ImageFilters.blackAndWhite(resource))
+                            }
                         }
                     }
+
+                    override fun onLoadCleared(placeholder: Drawable?) {}
                 })
-                val thumb = getVideoThumbnail(Uri.parse(mediaUri))
-
-                if (thumb != null) {
-
-                    val smallThumb = Bitmap.createScaledBitmap(
-                        thumb,
-                        150,
-                        150,
-                        true
-                    )
-
-                    val filters = listOf(
-                        FilterItem("Original", smallThumb),
-                        FilterItem("Bright", ImageFilters.bright(smallThumb)),
-                        FilterItem("Cool", ImageFilters.cool(smallThumb)),
-                        FilterItem("Warm", ImageFilters.warm(smallThumb)),
-                        FilterItem("Vintage", ImageFilters.vintage(smallThumb)),
-                        FilterItem("B&W", ImageFilters.blackAndWhite(smallThumb))
-                    )
-
-                    filterRecyclerView.adapter =
-                        FilterAdapter(filters) { filter ->
-
-                            selectedVideoFilter = filter.name
-                            previewSelectedFilter()
-
-                            Toast.makeText(
-                                this,
-                                "Selected: $selectedVideoFilter",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                }
-
-            } else {
-
-                videoPreview.visibility = View.GONE
-                imagePreview.visibility = View.VISIBLE
-
-                Glide.with(this)
-                    .asBitmap()
-                    .load(Uri.parse(mediaUri))
-                    .into(object : CustomTarget<Bitmap>() {
-
-                        override fun onResourceReady(
-                            resource: Bitmap,
-                            transition: Transition<in Bitmap>?
-                        ) {
-
-                            originalBitmap = resource
-                            imagePreview.setImageBitmap(resource)
-
-                            val thumb = Bitmap.createScaledBitmap(
-                                resource,
-                                150,
-                                150,
-                                true
-                            )
-
-                            val filters = listOf(
-
-                                FilterItem("Original", thumb),
-                                FilterItem("Bright", ImageFilters.bright(thumb)),
-                                FilterItem("Cool", ImageFilters.cool(thumb)),
-                                FilterItem("Warm", ImageFilters.warm(thumb)),
-                                FilterItem("Vintage", ImageFilters.vintage(thumb)),
-                                FilterItem("B&W", ImageFilters.blackAndWhite(thumb))
-                            )
-
-                            filterRecyclerView.adapter =
-                                FilterAdapter(filters) { filter ->
-                                    selectedVideoFilter = filter.name
-                                    when (filter.name) {
-
-                                        "Original" ->
-                                            imagePreview.setImageBitmap(resource)
-
-                                        "Bright" ->
-                                            imagePreview.setImageBitmap(
-                                                ImageFilters.bright(resource)
-                                            )
-
-                                        "Cool" ->
-                                            imagePreview.setImageBitmap(
-                                                ImageFilters.cool(resource)
-                                            )
-
-                                        "Warm" ->
-                                            imagePreview.setImageBitmap(
-                                                ImageFilters.warm(resource)
-                                            )
-
-                                        "Vintage" ->
-                                            imagePreview.setImageBitmap(
-                                                ImageFilters.vintage(resource)
-                                            )
-
-                                        "B&W" ->
-                                            imagePreview.setImageBitmap(
-                                                ImageFilters.blackAndWhite(resource)
-                                            )
-                                    }
-                                }
-                        }
-
-                        override fun onLoadCleared(placeholder: Drawable?) {}
-                    })
-            }
         }
-        btnFilter.setOnClickListener {
 
+        btnFilter.setOnClickListener {
             filterRecyclerView.visibility =
-                if (filterRecyclerView.visibility == View.VISIBLE)
-                    View.GONE
-                else
-                    View.VISIBLE
+                if (filterRecyclerView.visibility == View.VISIBLE) View.GONE else View.VISIBLE
         }
 
         btnText.setOnClickListener {
-
             filterRecyclerView.visibility = View.GONE
 
             val editText = EditText(this)
@@ -582,34 +477,19 @@ class EditorActivity : AppCompatActivity() {
                 .setTitle("Add Text")
                 .setView(editText)
                 .setPositiveButton("Add") { _, _ ->
-
                     val text = editText.text.toString().trim()
-
                     if (text.isNotEmpty()) {
-
                         txtOverlay.text = text
                         txtOverlay.visibility = View.VISIBLE
                         txtOverlay.bringToFront()
-
                         textToolbar.visibility = View.VISIBLE
 
                         txtOverlay.post {
-
                             val targetView =
-                                if (videoPreview.visibility == View.VISIBLE)
-                                    videoPreview
-                                else
-                                    imagePreview
+                                if (videoPreview.visibility == View.VISIBLE) videoPreview else imagePreview
 
-                            txtOverlay.x =
-                                targetView.x +
-                                        targetView.width / 2f -
-                                        txtOverlay.width / 2f
-
-                            txtOverlay.y =
-                                targetView.y +
-                                        targetView.height / 2f -
-                                        txtOverlay.height / 2f
+                            txtOverlay.x = targetView.x + targetView.width / 2f - txtOverlay.width / 2f
+                            txtOverlay.y = targetView.y + targetView.height / 2f - txtOverlay.height / 2f
                         }
                     }
                 }
@@ -618,92 +498,56 @@ class EditorActivity : AppCompatActivity() {
         }
 
         btnColor.setOnClickListener {
-
             colorScroll.visibility =
-                if (colorScroll.visibility == View.VISIBLE)
-                    View.GONE
-                else
-                    View.VISIBLE
+                if (colorScroll.visibility == View.VISIBLE) View.GONE else View.VISIBLE
         }
 
         colorContainer.removeAllViews()
-
         for (color in colors) {
-
             val colorView = View(this)
-
-            val params = LinearLayout.LayoutParams(100,100)
-            params.setMargins(16,16,16,16)
-
+            val params = LinearLayout.LayoutParams(100, 100)
+            params.setMargins(16, 16, 16, 16)
             colorView.layoutParams = params
             colorView.setBackgroundColor(color)
-
-            colorView.setOnClickListener {
-
-                txtOverlay.setTextColor(color)
-
-            }
-
+            colorView.setOnClickListener { txtOverlay.setTextColor(color) }
             colorContainer.addView(colorView)
         }
 
         var isBold = false
-
         btnBold.setOnClickListener {
-
             isBold = !isBold
-
             if (isBold)
                 txtOverlay.setTypeface(null, android.graphics.Typeface.BOLD)
             else
                 txtOverlay.setTypeface(null, android.graphics.Typeface.NORMAL)
-
         }
+
         var isItalic = false
-
         btnItalic.setOnClickListener {
-
             isItalic = !isItalic
-
             if (isItalic)
                 txtOverlay.setTypeface(null, android.graphics.Typeface.ITALIC)
             else
                 txtOverlay.setTypeface(null, android.graphics.Typeface.NORMAL)
-
         }
 
         var isUnderline = false
-
         btnUnderline.setOnClickListener {
-
             isUnderline = !isUnderline
-
             if (isUnderline) {
-
                 txtOverlay.paintFlags =
-                    txtOverlay.paintFlags or
-                            android.graphics.Paint.UNDERLINE_TEXT_FLAG
-
+                    txtOverlay.paintFlags or android.graphics.Paint.UNDERLINE_TEXT_FLAG
             } else {
-
                 txtOverlay.paintFlags =
-                    txtOverlay.paintFlags and
-                            android.graphics.Paint.UNDERLINE_TEXT_FLAG.inv()
-
+                    txtOverlay.paintFlags and android.graphics.Paint.UNDERLINE_TEXT_FLAG.inv()
             }
         }
 
-
         btnCrop.setOnClickListener {
-
             if (videoPreview.visibility == View.VISIBLE) {
-
-
-
                 val intent = Intent(this, VideoTrimActivity::class.java)
                 intent.putExtra("VIDEO_URI", mediaUri)
                 trimLauncher.launch(intent)
-
                 return@setOnClickListener
             }
 
@@ -722,84 +566,49 @@ class EditorActivity : AppCompatActivity() {
 
             cropLauncher.launch(intent)
         }
+
         txtOverlay.setOnLongClickListener {
-
             colorScroll.visibility =
-                if (colorScroll.visibility == View.VISIBLE)
-                    View.GONE
-                else
-                    View.VISIBLE
-
+                if (colorScroll.visibility == View.VISIBLE) View.GONE else View.VISIBLE
             true
         }
 
-        // ==========================
-        // DRAG + PINCH TO RESIZE
-        // ==========================
-
         txtOverlay.setOnTouchListener { view, event ->
-
             scaleDetector.onTouchEvent(event)
-
             when (event.actionMasked) {
-
                 MotionEvent.ACTION_DOWN -> {
-
                     dX = view.x - event.rawX
                     dY = view.y - event.rawY
-
                     view.performClick()
-
                     deleteLayout.visibility = View.VISIBLE
-
-                    deleteLayout.animate()
-                        .alpha(1f)
-                        .setDuration(200)
-                        .start()
+                    deleteLayout.animate().alpha(1f).setDuration(200).start()
                 }
-
                 MotionEvent.ACTION_MOVE -> {
-
                     view.x = event.rawX + dX
                     view.y = event.rawY + dY
 
                     val centerX = view.x + view.width / 2
                     val centerY = view.y + view.height / 2
-
                     val binX = deleteLayout.x + deleteLayout.width / 2
                     val binY = deleteLayout.y + deleteLayout.height / 2
 
-                    val distance = sqrt(
-                        (centerX - binX).pow(2) +
-                                (centerY - binY).pow(2)
-                    )
-
+                    val distance = sqrt((centerX - binX).pow(2) + (centerY - binY).pow(2))
                     if (distance < 180f) {
-
                         deleteLayout.scaleX = 1.3f
                         deleteLayout.scaleY = 1.3f
-
                     } else {
-
                         deleteLayout.scaleX = 1f
                         deleteLayout.scaleY = 1f
                     }
                 }
                 MotionEvent.ACTION_UP -> {
-
                     val centerX = view.x + view.width / 2
                     val centerY = view.y + view.height / 2
-
                     val binX = deleteLayout.x + deleteLayout.width / 2
                     val binY = deleteLayout.y + deleteLayout.height / 2
 
-                    val distance = sqrt(
-                        (centerX - binX).pow(2) +
-                                (centerY - binY).pow(2)
-                    )
-
+                    val distance = sqrt((centerX - binX).pow(2) + (centerY - binY).pow(2))
                     if (distance < 180f) {
-
                         txtOverlay.text = ""
                         txtOverlay.visibility = View.GONE
                     }
@@ -807,26 +616,16 @@ class EditorActivity : AppCompatActivity() {
                     deleteLayout.animate()
                         .alpha(0f)
                         .setDuration(200)
-                        .withEndAction {
-                            deleteLayout.visibility = View.GONE
-                        }
+                        .withEndAction { deleteLayout.visibility = View.GONE }
                         .start()
                 }
             }
-
             true
         }
 
-        // ==========================
-        // DOUBLE TAP TO EDIT
-        // ==========================
-
         txtOverlay.setOnClickListener {
-
             val currentTime = System.currentTimeMillis()
-
             if (currentTime - lastClickTime < 300) {
-
                 val editText = EditText(this)
                 editText.setText(txtOverlay.text)
                 editText.setSelection(editText.text.length)
@@ -835,9 +634,7 @@ class EditorActivity : AppCompatActivity() {
                     .setTitle("Edit Text")
                     .setView(editText)
                     .setPositiveButton("Save") { _, _ ->
-
                         val newText = editText.text.toString().trim()
-
                         if (newText.isNotEmpty()) {
                             txtOverlay.text = newText
                         }
@@ -845,7 +642,6 @@ class EditorActivity : AppCompatActivity() {
                     .setNegativeButton("Cancel", null)
                     .show()
             }
-
             lastClickTime = currentTime
         }
 
@@ -854,41 +650,21 @@ class EditorActivity : AppCompatActivity() {
         }
 
         btnAdjust.setOnClickListener {
-
             filterRecyclerView.visibility = View.GONE
-
             brightnessSeekBar.visibility =
-                if (brightnessSeekBar.visibility == View.VISIBLE)
-                    View.GONE
-                else
-                    View.VISIBLE
-
+                if (brightnessSeekBar.visibility == View.VISIBLE) View.GONE else View.VISIBLE
         }
-        // ==========================
-        // DEFAULT TEXT STYLE
-        // ==========================
 
         txtOverlay.apply {
             textSize = 34f
             setTextColor(Color.WHITE)
-            setShadowLayer(
-                10f,
-                3f,
-                3f,
-                Color.BLACK
-            )
+            setShadowLayer(10f, 3f, 3f, Color.BLACK)
             visibility = View.GONE
         }
-
-    } // End of onCreate()
-
-    override fun onStop() {
-        super.onStop()
-
-        // player.release()
     }
+
     override fun onDestroy() {
         super.onDestroy()
         player.release()
     }
-} // End of EditorActivity
+}
