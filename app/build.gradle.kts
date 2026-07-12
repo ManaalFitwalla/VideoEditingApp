@@ -38,7 +38,6 @@ android {
 dependencies {
 
     implementation("androidx.media3:media3-transformer:1.7.1")
-    implementation(libs.androidx.activity.ktx)
     implementation("com.github.MasayukiSuda:GPUVideo-android:v0.1.2")
     implementation("androidx.media3:media3-effect:1.7.1")
     implementation("androidx.media3:media3-exoplayer:1.7.1")
