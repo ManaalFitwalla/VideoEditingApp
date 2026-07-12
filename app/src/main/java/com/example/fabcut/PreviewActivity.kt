@@ -18,7 +18,7 @@ class PreviewActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.activity_preview)
 
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.previewContainer)) { v, insets ->
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id. previewContainer)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
