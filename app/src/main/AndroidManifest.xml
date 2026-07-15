@@ -14,10 +14,10 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.FabCut">
         <activity
-            android:name=".VideoTrimActivity"
+            android:name=".EditorActivity"
             android:exported="false" />
         <activity
-            android:name=".EditorActivity"
+            android:name=".VideoTrimActivity"
             android:exported="false" />
         <activity
             android:name="com.yalantis.ucrop.UCropActivity"
