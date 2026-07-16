@@ -8,6 +8,8 @@
     android:layout_height="match_parent"
     android:background="#000000">
 
+
+
     <!-- IMAGE -->
 
     <ImageView
@@ -37,6 +39,16 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
 
+    <com.example.fabcut.stickers.StickerCanvas
+        android:id="@+id/stickerCanvas"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toTopOf="@id/imagePreview"
+        app:layout_constraintBottom_toBottomOf="@id/imagePreview"
+        app:layout_constraintStart_toStartOf="@id/imagePreview"
+        app:layout_constraintEnd_toEndOf="@id/imagePreview"/>
+
+
     <!-- DRAGGABLE TEXT -->
 
     <TextView
@@ -55,6 +67,8 @@
         app:layout_constraintBottom_toBottomOf="@id/imagePreview"
         app:layout_constraintStart_toStartOf="@id/imagePreview"
         app:layout_constraintEnd_toEndOf="@id/imagePreview"/>
+
+
 
     <!-- SNAPCHAT DELETE BIN -->
 
@@ -169,6 +183,30 @@
         app:layout_constraintBottom_toTopOf="@id/bottomToolbar"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
+
+
+    <!-- Sticker Row (appears ABOVE categories) -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/stickerRecyclerView"
+        android:layout_width="0dp"
+        android:layout_height="110dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/categoryRecyclerView"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <!-- Category Row (Smile, Love...) -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/categoryRecyclerView"
+        android:layout_width="0dp"
+        android:layout_height="60dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toTopOf="@id/bottomToolbar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+
+
 
     <!-- BOTTOM TOOLBAR -->
 
@@ -457,26 +495,26 @@
                 app:cardCornerRadius="16dp"
                 app:cardBackgroundColor="#2A2A2A">
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:gravity="center"
-                android:orientation="vertical">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:orientation="vertical">
 
-                <ImageView
-                    android:layout_width="28dp"
-                    android:layout_height="28dp"
-                    android:src="@drawable/ic_brightness"
-                    app:tint="#FFFFFF"/>
+                    <ImageView
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
+                        android:src="@drawable/ic_brightness"
+                        app:tint="#FFFFFF"/>
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Brightness"
-                    android:textColor="#FFFFFF"
-                    android:textStyle="bold"/>
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Brightness"
+                        android:textColor="#FFFFFF"
+                        android:textStyle="bold"/>
 
-            </LinearLayout>
+                </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
 
