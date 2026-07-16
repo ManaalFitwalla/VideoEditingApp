@@ -649,6 +649,7 @@
                     stickerCanvas.undo()
                 }
 
+
                 btnRedo.setOnClickListener {
                     stickerCanvas.redo()
                 }
