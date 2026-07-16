@@ -9,7 +9,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Choose a Sticker"
+        android:text="Choose an Emoji Sticker"
         android:textColor="#FFFFFF"
         android:textSize="18sp"
         android:textStyle="bold"
@@ -18,6 +18,6 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/stickerRecyclerView"
         android:layout_width="match_parent"
-        android:layout_height="200dp" />
+        android:layout_height="320dp" />
 
 </LinearLayout>

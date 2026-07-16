@@ -1,16 +1,21 @@
 package com.example.fabcut
 
 import android.app.Dialog
+import android.content.ContentValues
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffColorFilter
 import android.graphics.drawable.Drawable
 import android.media.MediaMetadataRetriever
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
+import android.provider.MediaStore
 import android.view.Gravity
+import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
@@ -19,7 +24,9 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.RelativeLayout
+import android.widget.SeekBar
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -40,17 +47,25 @@ import com.bumptech.glide.request.target.CustomTarget
 import com.bumptech.glide.request.transition.Transition
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.card.MaterialCardView
-import com.yalantis.ucrop.UCrop
+import com.google.android.material.chip.Chip
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.io.OutputStream
 import java.io.File
-import java.util.Locale
+import kotlin.math.abs
 import kotlin.math.atan2
+import kotlin.math.cos
 import kotlin.math.pow
+import kotlin.math.sin
 import kotlin.math.sqrt
 
 class EditorActivity : AppCompatActivity() {
+
+    private var activeTextView: TextView? = null
+    private var isBoldActive = false
+    private var isItalicActive = false
+    private var isUnderlineActive = false
 
     private var selectedVideoFilter = "Original"
     private lateinit var imgCropCut: ImageView
@@ -62,11 +77,18 @@ class EditorActivity : AppCompatActivity() {
     private lateinit var bottomToolbar: LinearLayout
     private lateinit var player: ExoPlayer
 
+    private lateinit var btnBack: ImageView
+    private lateinit var btnSave: TextView
+    private lateinit var btnCropDone: TextView
+
     private lateinit var deleteLayout: LinearLayout
     private lateinit var colorScroll: View
     private lateinit var colorContainer: LinearLayout
 
     private lateinit var filterRecyclerView: RecyclerView
+    private lateinit var cropPanel: LinearLayout
+    private lateinit var tiltSeekBar: SeekBar
+    private lateinit var txtAngleVal: TextView
 
     private lateinit var btnFilter: MaterialCardView
     private lateinit var btnText: MaterialCardView
@@ -79,13 +101,20 @@ class EditorActivity : AppCompatActivity() {
     private lateinit var btnItalic: ImageView
     private lateinit var btnUnderline: ImageView
     private lateinit var trimContainer: FrameLayout
-    private lateinit var timeText: TextView
     private lateinit var thumbRecycler: RecyclerView
 
     private lateinit var leftHandle: ImageView
     private lateinit var rightHandle: ImageView
     private lateinit var leftShade: View
     private lateinit var rightShade: View
+
+    // Ratio chips
+    private lateinit var chipFree: Chip
+    private lateinit var chip11: Chip
+    private lateinit var chip43: Chip
+    private lateinit var chip34: Chip
+    private lateinit var chip169: Chip
+    private lateinit var chip916: Chip
 
     private val thumbnailList = ArrayList<Bitmap>()
     private var videoDuration = 0L
@@ -94,23 +123,6 @@ class EditorActivity : AppCompatActivity() {
 
     private var originalBitmap: Bitmap? = null
     private lateinit var mediaUri: String
-
-    private var activeTextView: TextView? = null
-
-    // Handler loop to update video playback time smoothly in real-time
-    private val timeHandler = Handler(Looper.getMainLooper())
-    private val updateTimeRunnable = object : Runnable {
-        override fun run() {
-            if (::player.isInitialized && player.isPlaying) {
-                val currentMs = player.currentPosition
-                val totalMs = player.duration.coerceAtLeast(1L)
-                timeText.text = "${formatTime(currentMs)} / ${formatTime(totalMs)}"
-                timeHandler.postDelayed(this, 100)
-            } else if (::player.isInitialized) {
-                timeHandler.postDelayed(this, 200)
-            }
-        }
-    }
 
     private val trimLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -131,28 +143,50 @@ class EditorActivity : AppCompatActivity() {
                 player.setMediaItem(mediaItem)
                 player.prepare()
                 player.play()
-
-                timeText.text = "${formatTime(trimStart)} / ${formatTime(trimEnd)}"
             } else {
                 player.play()
             }
         }
 
-    private val cropLauncher =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == RESULT_OK) {
-                val resultUri = UCrop.getOutput(result.data!!)
-                if (resultUri != null) {
-                    imagePreview.setImageURI(resultUri)
-                }
+    private fun saveBitmapToGallery(bitmap: Bitmap) {
+        val filename = "FabCut_${System.currentTimeMillis()}.jpg"
+        var fos: OutputStream? = null
+
+        val contentValues = ContentValues().apply {
+            put(MediaStore.MediaColumns.DISPLAY_NAME, filename)
+            put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                put(MediaStore.MediaColumns.RELATIVE_PATH, "Pictures/FabCut")
             }
         }
 
-    private fun formatTime(ms: Long): String {
-        val totalSeconds = ms / 1000
-        val minutes = totalSeconds / 60
-        val seconds = totalSeconds % 60
-        return String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds)
+        val resolver = contentResolver
+        try {
+            val imageUri =
+                resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+            if (imageUri != null) {
+                fos = resolver.openOutputStream(imageUri)
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos!!)
+                fos.flush()
+                Toast.makeText(this, "Saved to Gallery!", Toast.LENGTH_SHORT).show()
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Toast.makeText(this, "Failed to save image", Toast.LENGTH_SHORT).show()
+        } finally {
+            fos?.close()
+        }
+    }
+
+    private fun captureCompositeBitmap(): Bitmap? {
+        val container = findViewById<FrameLayout>(R.id.previewContainer) ?: return null
+        if (container.width <= 0 || container.height <= 0) return null
+
+        val bitmap = Bitmap.createBitmap(container.width, container.height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        container.draw(canvas)
+        textOverlayContainer.draw(canvas)
+        return bitmap
     }
 
     private fun getVideoThumbnail(videoUri: Uri): Bitmap? {
@@ -175,9 +209,7 @@ class EditorActivity : AppCompatActivity() {
     private fun previewSelectedFilter() {
         try {
             when (selectedVideoFilter) {
-                "Original" -> {
-                    player.setVideoEffects(emptyList())
-                }
+                "Original" -> player.setVideoEffects(emptyList())
 
                 "Bright" -> {
                     val brightMatrix = floatArrayOf(
@@ -288,6 +320,8 @@ class EditorActivity : AppCompatActivity() {
             gravity = Gravity.CENTER
             inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE
 
+            textCursorDrawable = null
+
             if (targetTextView != null && targetTextView.text.isNotEmpty()) {
                 setText(targetTextView.text)
                 setSelection(text.length)
@@ -307,17 +341,39 @@ class EditorActivity : AppCompatActivity() {
         dialog.setContentView(rootLayout)
 
         btnDone.setOnClickListener {
-            val text = editTextInput.text.toString().trim()
-            if (text.isNotEmpty()) {
+            val textVal = editTextInput.text.toString().trim()
+            if (textVal.isNotEmpty()) {
                 if (targetTextView != null) {
-                    targetTextView.text = text
+                    targetTextView.text = textVal
                 } else {
-                    addNewTextOverlay(text)
+                    val textView = TextView(this@EditorActivity).apply {
+                        text = textVal
+                        setTextColor(Color.WHITE)
+                        textSize = 28f
+                        setPadding(20, 20, 20, 20)
+                        gravity = Gravity.CENTER
+                        alpha = 1.0f
+                    }
+
+                    val oParams = RelativeLayout.LayoutParams(
+                        ViewGroup.LayoutParams.WRAP_CONTENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT
+                    ).apply {
+                        addRule(RelativeLayout.CENTER_IN_PARENT)
+                    }
+
+                    // Fixed: Pass it through our standard transform tracking system
+                    textView.layoutParams = oParams
+                    setupTransformTouchListener(textView, isText = true)
+                    textOverlayContainer.addView(textView)
+
+                    this@EditorActivity.activeTextView = textView
+                    textToolbar.visibility = View.VISIBLE
                 }
             } else if (targetTextView != null) {
                 textOverlayContainer.removeView(targetTextView)
-                if (activeTextView == targetTextView) {
-                    activeTextView = null
+                if (this@EditorActivity.activeTextView == targetTextView) {
+                    this@EditorActivity.activeTextView = null
                     textToolbar.visibility = View.GONE
                     colorScroll.visibility = View.GONE
                 }
@@ -338,6 +394,7 @@ class EditorActivity : AppCompatActivity() {
             setShadowLayer(10f, 3f, 3f, Color.BLACK)
             setPadding(16, 16, 16, 16)
             elevation = 110f
+            alpha = 1.0f
         }
 
         val params = FrameLayout.LayoutParams(
@@ -356,12 +413,13 @@ class EditorActivity : AppCompatActivity() {
         textToolbar.visibility = View.VISIBLE
     }
 
-    private fun addNewStickerOverlay(stickerEmoji: String) {
+    private fun addNewStickerOverlay(emojiText: String) {
         val stickerView = TextView(this).apply {
-            text = stickerEmoji
-            textSize = 60f
+            text = emojiText
+            textSize = 64f
             elevation = 110f
-            setPadding(16, 16, 16, 16)
+            setPadding(12, 12, 12, 12)
+            alpha = 1.0f
         }
 
         val params = FrameLayout.LayoutParams(
@@ -380,13 +438,23 @@ class EditorActivity : AppCompatActivity() {
     private fun setupTransformTouchListener(view: View, isText: Boolean) {
         var dX = 0f
         var dY = 0f
-        var lastDist = 0f
-        var lastAngle = 0f
+        var startDist = 0f
+        var startAngle = 0f
+        var baseScaleX = 1f
+        var baseScaleY = 1f
+        var baseRotation = 0f
 
         view.setOnTouchListener { v, event ->
+            v.alpha = 1.0f
+
             if (isText && v is TextView) {
                 activeTextView = v
                 textToolbar.visibility = View.VISIBLE
+
+                val currentTypeface = v.typeface
+                isBoldActive = currentTypeface != null && currentTypeface.isBold
+                isItalicActive = currentTypeface != null && currentTypeface.isItalic
+                isUnderlineActive = (v.paintFlags and android.graphics.Paint.UNDERLINE_TEXT_FLAG) != 0
             }
 
             when (event.actionMasked) {
@@ -394,20 +462,18 @@ class EditorActivity : AppCompatActivity() {
                     dX = v.x - event.rawX
                     dY = v.y - event.rawY
                     deleteLayout.visibility = View.VISIBLE
-                    deleteLayout.animate().alpha(1f).setDuration(200).start()
+                    deleteLayout.animate().alpha(1f).setDuration(150).start()
                 }
 
                 MotionEvent.ACTION_POINTER_DOWN -> {
                     if (event.pointerCount == 2) {
-                        val x0 = event.getX(0)
-                        val y0 = event.getY(0)
-                        val x1 = event.getX(1)
-                        val y1 = event.getY(1)
-
-                        val dx = x0 - x1
-                        val dy = y0 - y1
-                        lastDist = sqrt((dx * dx + dy * dy).toDouble()).toFloat()
-                        lastAngle = Math.toDegrees(atan2(dy.toDouble(), dx.toDouble())).toFloat()
+                        val dx = event.getX(0) - event.getX(1)
+                        val dy = event.getY(0) - event.getY(1)
+                        startDist = sqrt((dx * dx + dy * dy).toDouble()).toFloat()
+                        startAngle = Math.toDegrees(atan2(dy.toDouble(), dx.toDouble())).toFloat()
+                        baseScaleX = v.scaleX
+                        baseScaleY = v.scaleY
+                        baseRotation = v.rotation
                     }
                 }
 
@@ -415,30 +481,19 @@ class EditorActivity : AppCompatActivity() {
                     if (event.pointerCount == 1) {
                         v.x = event.rawX + dX
                         v.y = event.rawY + dY
-                    } else if (event.pointerCount == 2) {
-                        val x0 = event.getX(0)
-                        val y0 = event.getY(0)
-                        val x1 = event.getX(1)
-                        val y1 = event.getY(1)
-
-                        val dx = x0 - x1
-                        val dy = y0 - y1
+                    } else if (event.pointerCount == 2 && startDist > 10f) {
+                        val dx = event.getX(0) - event.getX(1)
+                        val dy = event.getY(0) - event.getY(1)
                         val newDist = sqrt((dx * dx + dy * dy).toDouble()).toFloat()
                         val newAngle = Math.toDegrees(atan2(dy.toDouble(), dx.toDouble())).toFloat()
 
-                        if (lastDist > 0) {
-                            val scaleFactor = newDist / lastDist
-                            val newScaleX = (v.scaleX * scaleFactor).coerceIn(0.5f, 4.0f)
-                            val newScaleY = (v.scaleY * scaleFactor).coerceIn(0.5f, 4.0f)
-                            v.scaleX = newScaleX
-                            v.scaleY = newScaleY
-                        }
+                        val factor = newDist / startDist
+                        val clampedScale = (baseScaleX * factor).coerceIn(0.4f, 5.0f)
+                        v.scaleX = clampedScale
+                        v.scaleY = clampedScale
 
-                        val angleDelta = newAngle - lastAngle
-                        v.rotation = (v.rotation + angleDelta).toFloat()
-
-                        lastDist = newDist
-                        lastAngle = newAngle
+                        val angleDiff = newAngle - startAngle
+                        v.rotation = baseRotation + angleDiff
                     }
 
                     val centerX = v.x + v.width / 2
@@ -474,12 +529,11 @@ class EditorActivity : AppCompatActivity() {
 
                     deleteLayout.animate()
                         .alpha(0f)
-                        .setDuration(200)
+                        .setDuration(150)
                         .withEndAction { deleteLayout.visibility = View.GONE }
                         .start()
                 }
             }
-
             true
         }
 
@@ -497,15 +551,35 @@ class EditorActivity : AppCompatActivity() {
         bottomSheetDialog.setContentView(view)
 
         val recycler = view.findViewById<RecyclerView>(R.id.stickerRecyclerView)
-        recycler.layoutManager = GridLayoutManager(this, 4)
+        recycler.layoutManager = GridLayoutManager(this, 5)
 
-        val stickers = listOf(
-            "😂", "❤️", "🔥", "👍", "😎", "😍", "🎉", "✨",
-            "💯", "🙌", "💥", "🥳", "👑", "🚀", "⭐️", "💪"
+        val emojis = listOf(
+            "😂", "❤️", "🔥", "👍", "😎", "😍", "🎉", "✨", "💯", "🙌",
+            "💥", "🥳", "👑", "🚀", "⭐️", "💪", "🤩", "😈", "🤡", "⚡️",
+            "👀", "💖", "🍿", "🏆", "🌟", "🎯", "📸", "🎁", "🎨", "🎭"
         )
 
-        recycler.adapter = StickerAdapter(stickers) { selectedSticker ->
-            addNewStickerOverlay(selectedSticker)
+        recycler.adapter = StickerAdapter(emojis) { selectedEmoji ->
+            val stickerView = TextView(this@EditorActivity).apply {
+                text = selectedEmoji
+                textSize = 48f
+                gravity = Gravity.CENTER
+                setPadding(20, 20, 20, 20)
+                alpha = 1.0f
+            }
+
+            val sParams = RelativeLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply {
+                addRule(RelativeLayout.CENTER_IN_PARENT)
+            }
+
+            // Fixed: Link the layout configurations directly to the system listener
+            stickerView.layoutParams = sParams
+            setupTransformTouchListener(stickerView, isText = false)
+            textOverlayContainer.addView(stickerView)
+
             bottomSheetDialog.dismiss()
         }
 
@@ -534,10 +608,84 @@ class EditorActivity : AppCompatActivity() {
                 strokeWidth = 3
 
                 setOnClickListener {
-                    activeTextView?.setTextColor(color)
+                    this@EditorActivity.activeTextView?.setTextColor(color)
                 }
             }
             colorContainer.addView(colorCard)
+        }
+    }
+
+    private fun setupNativeCropPanel() {
+        val cropGridView = findViewById<com.example.fabcut.CropGridView>(R.id.cropGridView)
+        val ratioChips = listOf(chipFree, chip11, chip43, chip34, chip169, chip916)
+
+        fun selectChip(selectedChip: Chip) {
+            ratioChips.forEach { chip ->
+                val isTarget = (chip == selectedChip)
+                chip.isSelected = isTarget
+                chip.isActivated = isTarget
+                chip.isChecked = isTarget
+            }
+        }
+
+        tiltSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                val angle = progress - 45
+                txtAngleVal.text = "$angle°"
+
+                val targetView: View =
+                    if (videoPreview.visibility == View.VISIBLE) videoPreview else imagePreview
+                targetView.rotation = angle.toFloat()
+
+                val rad = Math.toRadians(abs(angle).toDouble())
+                val zoomFactor = (cos(rad) + sin(rad)).toFloat()
+                targetView.scaleX = zoomFactor
+                targetView.scaleY = zoomFactor
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+        })
+
+        txtAngleVal.setOnClickListener {
+            tiltSeekBar.progress = 45
+            val targetView: View =
+                if (videoPreview.visibility == View.VISIBLE) videoPreview else imagePreview
+            targetView.rotation = 0f
+            targetView.scaleX = 1f
+            targetView.scaleY = 1f
+            txtAngleVal.text = "0°"
+        }
+
+        chipFree.setOnClickListener {
+            selectChip(chipFree)
+            cropGridView.setFreeRatio()
+            cropGridView.fitToImage(imagePreview)
+        }
+        chip11.setOnClickListener {
+            selectChip(chip11)
+            cropGridView.setCropRatio(1.0f)
+            cropGridView.fitToImage(imagePreview)
+        }
+        chip43.setOnClickListener {
+            selectChip(chip43)
+            cropGridView.setCropRatio(4.0f / 3.0f)
+            cropGridView.fitToImage(imagePreview)
+        }
+        chip34.setOnClickListener {
+            selectChip(chip34)
+            cropGridView.setCropRatio(3.0f / 4.0f)
+            cropGridView.fitToImage(imagePreview)
+        }
+        chip169.setOnClickListener {
+            selectChip(chip169)
+            cropGridView.setCropRatio(16.0f / 9.0f)
+            cropGridView.fitToImage(imagePreview)
+        }
+        chip916.setOnClickListener {
+            selectChip(chip916)
+            cropGridView.setCropRatio(9.0f / 16.0f)
+            cropGridView.fitToImage(imagePreview)
         }
     }
 
@@ -552,6 +700,10 @@ class EditorActivity : AppCompatActivity() {
             v.setPadding(bars.left, bars.top, bars.right, bars.bottom)
             insets
         }
+
+        btnBack = findViewById(R.id.btnBack)
+        btnSave = findViewById(R.id.btnSave)
+        btnCropDone = findViewById(R.id.btnCropDone)
 
         imgCropCut = findViewById(R.id.imgCropCut)
         txtCropCut = findViewById(R.id.txtCropCut)
@@ -569,6 +721,9 @@ class EditorActivity : AppCompatActivity() {
         bottomToolbar = findViewById(R.id.bottomToolbar)
 
         filterRecyclerView = findViewById(R.id.filterRecyclerView)
+        cropPanel = findViewById(R.id.cropPanel)
+        tiltSeekBar = findViewById(R.id.tiltSeekBar)
+        txtAngleVal = findViewById(R.id.txtAngleVal)
 
         btnFilter = findViewById(R.id.btnFilter)
         btnText = findViewById(R.id.btnText)
@@ -582,7 +737,6 @@ class EditorActivity : AppCompatActivity() {
         btnUnderline = findViewById(R.id.btnUnderline)
 
         trimContainer = findViewById(R.id.trimContainer)
-        timeText = findViewById(R.id.timeText)
         thumbRecycler = findViewById(R.id.thumbRecycler)
 
         leftHandle = findViewById(R.id.leftHandle)
@@ -590,19 +744,52 @@ class EditorActivity : AppCompatActivity() {
         leftShade = findViewById(R.id.leftShade)
         rightShade = findViewById(R.id.rightShade)
 
-        thumbRecycler.layoutManager =
-            LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        chipFree = findViewById(R.id.chipFree)
+        chip11 = findViewById(R.id.chip11)
+        chip43 = findViewById(R.id.chip43)
+        chip34 = findViewById(R.id.chip34)
+        chip169 = findViewById(R.id.chip169)
+        chip916 = findViewById(R.id.chip916)
 
+        val lilacColor = Color.parseColor("#D0BCFF")
+        tiltSeekBar.progressTintList = android.content.res.ColorStateList.valueOf(lilacColor)
+        tiltSeekBar.thumbTintList = android.content.res.ColorStateList.valueOf(lilacColor)
+
+        btnSave.background?.colorFilter = PorterDuffColorFilter(lilacColor, PorterDuff.Mode.SRC_IN)
+
+        btnBack.setOnClickListener { finish() }
+
+        btnCropDone.setOnClickListener {
+            val isVideoMode = intent.getBooleanExtra("IS_VIDEO", false)
+            val grid = findViewById<com.example.fabcut.CropGridView>(R.id.cropGridView)
+
+            if (!isVideoMode) {
+                val croppedResultBitmap = grid.getCroppedBitmap(imagePreview)
+                if (croppedResultBitmap != null) {
+                    imagePreview.setImageBitmap(croppedResultBitmap)
+                    originalBitmap = croppedResultBitmap
+                }
+            }
+
+            cropPanel.visibility = View.GONE
+            btnCropDone.visibility = View.GONE
+            grid.visibility = View.GONE
+            btnSave.visibility = View.VISIBLE
+        }
+
+        thumbRecycler.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
         thumbRecycler.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
                 val offset = recyclerView.computeHorizontalScrollOffset()
                 val range = recyclerView.computeHorizontalScrollRange()
                 val extent = recyclerView.computeHorizontalScrollExtent()
 
-                val progress = offset.toFloat() / (range - extent).coerceAtLeast(1)
-                val position = (progress * videoDuration).toLong()
-                player.seekTo(position)
-                timeText.text = "${formatTime(position)} / ${formatTime(videoDuration)}"
+                val maxScrollable = range - extent
+                if (maxScrollable > 0 && videoDuration > 0) {
+                    val progress = offset.toFloat() / maxScrollable.toFloat()
+                    val position = (progress * videoDuration).toLong()
+                    player.seekTo(position)
+                }
             }
         })
 
@@ -611,23 +798,64 @@ class EditorActivity : AppCompatActivity() {
         player.repeatMode = Player.REPEAT_MODE_ALL
         player.setVideoEffects(emptyList())
 
-        filterRecyclerView.layoutManager =
-            LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        filterRecyclerView.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
         filterRecyclerView.visibility = View.GONE
 
         setupColorSpectrumBar()
+        setupNativeCropPanel()
 
-        mediaUri = intent.getStringExtra("MEDIA_URI")!!
+        var startX = 0f
+        leftHandle.setOnTouchListener { view, event ->
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> { startX = event.rawX; true }
+                MotionEvent.ACTION_MOVE -> {
+                    val dx = event.rawX - startX
+                    val newLeft = (view.x + dx).coerceIn(0f, rightHandle.x - 100f)
+                    view.x = newLeft
+                    startX = event.rawX
+                    leftShade.layoutParams = leftShade.layoutParams.apply { width = newLeft.toInt() }
+                    leftShade.requestLayout()
+                    val tWidth = trimContainer.width.toFloat()
+                    if (tWidth > 0 && videoDuration > 0) {
+                        trimStart = ((newLeft / tWidth) * videoDuration).toLong()
+                        player.seekTo(trimStart)
+                    }
+                    true
+                }
+                else -> false
+            }
+        }
+        rightHandle.setOnTouchListener { view, event ->
+            when (event.action) {
+                MotionEvent.ACTION_DOWN -> { startX = event.rawX; true }
+                MotionEvent.ACTION_MOVE -> {
+                    val dx = event.rawX - startX
+                    val maxRight = trimContainer.width.toFloat() - view.width
+                    val newLeft = (view.x + dx).coerceIn(leftHandle.x + 100f, maxRight)
+                    view.x = newLeft
+                    startX = event.rawX
+                    rightShade.layoutParams = rightShade.layoutParams.apply { width = (trimContainer.width - (newLeft + view.width)).toInt() }
+                    rightShade.requestLayout()
+                    val tWidth = trimContainer.width.toFloat()
+                    if (tWidth > 0 && videoDuration > 0) {
+                        trimEnd = (((newLeft + view.width) / tWidth) * videoDuration).toLong()
+                        player.seekTo(trimEnd)
+                    }
+                    true
+                }
+                else -> false
+            }
+        }
+
+        mediaUri = intent.getStringExtra("MEDIA_URI") ?: ""
 
         val isVideo = intent.getBooleanExtra("IS_VIDEO", false)
         if (isVideo) {
             txtCropCut.text = "Trim"
             imgCropCut.setImageResource(R.drawable.ic_cut)
-            timeText.visibility = View.VISIBLE
         } else {
             txtCropCut.text = "Crop"
             imgCropCut.setImageResource(R.drawable.ic_crop)
-            timeText.visibility = View.GONE
         }
 
         if (isVideo) {
@@ -639,25 +867,20 @@ class EditorActivity : AppCompatActivity() {
             player.prepare()
             player.play()
 
-            timeHandler.post(updateTimeRunnable)
-
             player.addListener(object : Player.Listener {
                 override fun onPlaybackStateChanged(state: Int) {
                     if (state == Player.STATE_READY) {
                         videoDuration = player.duration
                         trimStart = 0
                         trimEnd = videoDuration
-                        timeText.text = "00:00 / ${formatTime(videoDuration)}"
                         generateThumbnails(Uri.parse(mediaUri))
                     }
                 }
             })
 
             val thumb = getVideoThumbnail(Uri.parse(mediaUri))
-
             if (thumb != null) {
                 val smallThumb = Bitmap.createScaledBitmap(thumb, 150, 150, true)
-
                 val filters = listOf(
                     FilterItem("Original", smallThumb),
                     FilterItem("Bright", ImageFilters.bright(smallThumb)),
@@ -666,7 +889,6 @@ class EditorActivity : AppCompatActivity() {
                     FilterItem("Vintage", ImageFilters.vintage(smallThumb)),
                     FilterItem("B&W", ImageFilters.blackAndWhite(smallThumb))
                 )
-
                 filterRecyclerView.adapter = FilterAdapter(filters) { filter ->
                     selectedVideoFilter = filter.name
                     previewSelectedFilter()
@@ -681,15 +903,14 @@ class EditorActivity : AppCompatActivity() {
                 .asBitmap()
                 .load(Uri.parse(mediaUri))
                 .into(object : CustomTarget<Bitmap>() {
-                    override fun onResourceReady(
-                        resource: Bitmap,
-                        transition: Transition<in Bitmap>?
-                    ) {
+                    override fun onResourceReady(resource: Bitmap, transition: Transition<in Bitmap>?) {
                         originalBitmap = resource
                         imagePreview.setImageBitmap(resource)
 
-                        val thumb = Bitmap.createScaledBitmap(resource, 150, 150, true)
+                        val grid = findViewById<com.example.fabcut.CropGridView>(R.id.cropGridView)
+                        grid.post { grid.fitToImage(imagePreview) }
 
+                        val thumb = Bitmap.createScaledBitmap(resource, 150, 150, true)
                         val filters = listOf(
                             FilterItem("Original", thumb),
                             FilterItem("Bright", ImageFilters.bright(thumb)),
@@ -698,112 +919,126 @@ class EditorActivity : AppCompatActivity() {
                             FilterItem("Vintage", ImageFilters.vintage(thumb)),
                             FilterItem("B&W", ImageFilters.blackAndWhite(thumb))
                         )
-
                         filterRecyclerView.adapter = FilterAdapter(filters) { filter ->
                             selectedVideoFilter = filter.name
-
                             lifecycleScope.launch(Dispatchers.Default) {
+                                val baseBitmap = originalBitmap ?: resource
                                 val resultBitmap = when (filter.name) {
-                                    "Original" -> resource
-                                    "Bright" -> ImageFilters.bright(resource)
-                                    "Cool" -> ImageFilters.cool(resource)
-                                    "Warm" -> ImageFilters.warm(resource)
-                                    "Vintage" -> ImageFilters.vintage(resource)
-                                    "B&W" -> ImageFilters.blackAndWhite(resource)
-                                    else -> resource
+                                    "Original" -> baseBitmap
+                                    "Bright" -> ImageFilters.bright(baseBitmap)
+                                    "Cool" -> ImageFilters.cool(baseBitmap)
+                                    "Warm" -> ImageFilters.warm(baseBitmap)
+                                    "Vintage" -> ImageFilters.vintage(baseBitmap)
+                                    "B&W" -> ImageFilters.blackAndWhite(baseBitmap)
+                                    else -> baseBitmap
                                 }
-
-                                withContext(Dispatchers.Main) {
-                                    imagePreview.setImageBitmap(resultBitmap)
-                                }
+                                withContext(Dispatchers.Main) { imagePreview.setImageBitmap(resultBitmap) }
                             }
                         }
                     }
-
-                    override fun onLoadCleared(placeholder: Drawable?) {}
+                    override fun onLoadCleared(placeholder: android.graphics.drawable.Drawable?) {}
                 })
         }
 
-        btnFilter.setOnClickListener {
-            filterRecyclerView.visibility =
-                if (filterRecyclerView.visibility == View.VISIBLE) View.GONE else View.VISIBLE
-        }
-
-        btnText.setOnClickListener {
+        btnCrop.setOnClickListener {
             filterRecyclerView.visibility = View.GONE
-            showGooglePhotosTextDialog()
-        }
+            textToolbar.visibility = View.GONE
+            colorScroll.visibility = View.GONE
 
-        btnSticker.setOnClickListener {
-            filterRecyclerView.visibility = View.GONE
-            showStickerPicker()
-        }
+            val grid = findViewById<com.example.fabcut.CropGridView>(R.id.cropGridView)
+            val ratioScrollContainer = chipFree.parent.parent as View
 
-        btnColor.setOnClickListener {
-            colorScroll.visibility =
-                if (colorScroll.visibility == View.VISIBLE) View.GONE else View.VISIBLE
-        }
-
-        var isBold = false
-        btnBold.setOnClickListener {
-            isBold = !isBold
-            activeTextView?.setTypeface(null, if (isBold) android.graphics.Typeface.BOLD else android.graphics.Typeface.NORMAL)
-        }
-
-        var isItalic = false
-        btnItalic.setOnClickListener {
-            isItalic = !isItalic
-            activeTextView?.setTypeface(null, if (isItalic) android.graphics.Typeface.ITALIC else android.graphics.Typeface.NORMAL)
-        }
-
-        var isUnderline = false
-        btnUnderline.setOnClickListener {
-            activeTextView?.let { tv ->
-                isUnderline = !isUnderline
-                tv.paintFlags = if (isUnderline) {
-                    tv.paintFlags or android.graphics.Paint.UNDERLINE_TEXT_FLAG
+            if (isVideo) {
+                // FIXED: Boot up VideoTrimActivity using trimLauncher to capture returned timestamps
+                val trimIntent = Intent(this, VideoTrimActivity::class.java).apply {
+                    putExtra("VIDEO_URI", mediaUri)
+                }
+                trimLauncher.launch(trimIntent)
+            } else {
+                if (cropPanel.visibility == View.VISIBLE) {
+                    cropPanel.visibility = View.GONE
+                    btnCropDone.visibility = View.GONE
+                    grid.visibility = View.GONE
+                    btnSave.visibility = View.VISIBLE
                 } else {
-                    tv.paintFlags and android.graphics.Paint.UNDERLINE_TEXT_FLAG.inv()
+                    cropPanel.visibility = View.VISIBLE
+                    btnCropDone.visibility = View.VISIBLE
+                    btnSave.visibility = View.GONE
+
+                    trimContainer.visibility = View.GONE
+                    grid.visibility = View.VISIBLE
+                    tiltSeekBar.parent?.let { (it as View).visibility = View.VISIBLE }
+                    ratioScrollContainer.visibility = View.VISIBLE
+                    grid.post { grid.fitToImage(imagePreview) }
                 }
             }
         }
 
-        btnCrop.setOnClickListener {
-            if (videoPreview.visibility == View.VISIBLE) {
-                val intent = Intent(this, VideoTrimActivity::class.java)
-                intent.putExtra("VIDEO_URI", mediaUri)
-                trimLauncher.launch(intent)
-                return@setOnClickListener
-            }
-
-            if (mediaUri.isEmpty()) return@setOnClickListener
-
-            val sourceUri = Uri.parse(mediaUri)
-            val destinationUri = Uri.fromFile(File(cacheDir, "cropped.jpg"))
-
-            val options = UCrop.Options().apply {
-                setFreeStyleCropEnabled(true)
-                setToolbarColor(Color.parseColor("#1A1A1A"))
-                setToolbarWidgetColor(Color.WHITE)
-                setToolbarTitle("Crop Image")
-                setActiveControlsWidgetColor(Color.WHITE)
-                setDimmedLayerColor(Color.parseColor("#CC000000"))
-                setCropFrameColor(Color.WHITE)
-                setCropGridColor(Color.parseColor("#55FFFFFF"))
-                setLogoColor(Color.TRANSPARENT)
-            }
-
-            val intent = UCrop.of(sourceUri, destinationUri)
-                .withOptions(options)
-                .getIntent(this)
-
-            cropLauncher.launch(intent)
+        btnText.setOnClickListener {
+            cropPanel.visibility = View.GONE
+            findViewById<com.example.fabcut.CropGridView>(R.id.cropGridView).visibility = View.GONE
+            filterRecyclerView.visibility = View.GONE
+            btnCropDone.visibility = View.GONE
+            btnSave.visibility = View.VISIBLE
+            showGooglePhotosTextDialog()
         }
-    }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        timeHandler.removeCallbacks(updateTimeRunnable)
-        player.release()
+        btnSticker.setOnClickListener {
+            cropPanel.visibility = View.GONE
+            findViewById<com.example.fabcut.CropGridView>(R.id.cropGridView).visibility = View.GONE
+            filterRecyclerView.visibility = View.GONE
+            textToolbar.visibility = View.GONE
+            colorScroll.visibility = View.GONE
+            btnCropDone.visibility = View.GONE
+            btnSave.visibility = View.VISIBLE
+            showStickerPicker()
+        }
+
+        btnFilter.setOnClickListener {
+            cropPanel.visibility = View.GONE
+            findViewById<com.example.fabcut.CropGridView>(R.id.cropGridView).visibility = View.GONE
+            textToolbar.visibility = View.GONE
+            colorScroll.visibility = View.GONE
+            btnCropDone.visibility = View.GONE
+            btnSave.visibility = View.VISIBLE
+            filterRecyclerView.visibility = if (filterRecyclerView.visibility == View.VISIBLE) View.GONE else View.VISIBLE
+        }
+
+        btnColor.setOnClickListener {
+            colorScroll.visibility = if (colorScroll.visibility == View.VISIBLE) View.GONE else View.VISIBLE
+        }
+
+        btnBold.setOnClickListener {
+            this@EditorActivity.activeTextView?.let { tv ->
+                this@EditorActivity.isBoldActive = !this@EditorActivity.isBoldActive
+                val style = if (this@EditorActivity.isBoldActive && this@EditorActivity.isItalicActive) android.graphics.Typeface.BOLD_ITALIC
+                else if (this@EditorActivity.isBoldActive) android.graphics.Typeface.BOLD
+                else if (this@EditorActivity.isItalicActive) android.graphics.Typeface.ITALIC
+                else android.graphics.Typeface.NORMAL
+                tv.setTypeface(null, style)
+            }
+        }
+
+        btnItalic.setOnClickListener {
+            this@EditorActivity.activeTextView?.let { tv ->
+                this@EditorActivity.isItalicActive = !this@EditorActivity.isItalicActive
+                val style = if (this@EditorActivity.isBoldActive && this@EditorActivity.isItalicActive) android.graphics.Typeface.BOLD_ITALIC
+                else if (this@EditorActivity.isBoldActive) android.graphics.Typeface.BOLD
+                else if (this@EditorActivity.isItalicActive) android.graphics.Typeface.ITALIC
+                else android.graphics.Typeface.NORMAL
+                tv.setTypeface(null, style)
+            }
+        }
+
+        btnUnderline.setOnClickListener {
+            this@EditorActivity.activeTextView?.let { tv ->
+                this@EditorActivity.isUnderlineActive = !this@EditorActivity.isUnderlineActive
+                if (this@EditorActivity.isUnderlineActive) {
+                    tv.paintFlags = tv.paintFlags or android.graphics.Paint.UNDERLINE_TEXT_FLAG
+                } else {
+                    tv.paintFlags = tv.paintFlags and android.graphics.Paint.UNDERLINE_TEXT_FLAG.inv()
+                }
+            }
+        }
     }
 }

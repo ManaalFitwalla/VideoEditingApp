@@ -24,6 +24,11 @@ class StickerAdapter(
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val sticker = stickers[position]
         holder.txtSticker.text = sticker
+
+        // Ensure absolutely full opacity on rendering item views
+        holder.txtSticker.alpha = 1.0f
+        holder.itemView.alpha = 1.0f
+
         holder.itemView.setOnClickListener { onStickerClick(sticker) }
     }
 
