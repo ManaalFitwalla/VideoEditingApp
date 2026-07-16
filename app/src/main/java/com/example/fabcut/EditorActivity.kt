@@ -86,6 +86,9 @@
             private lateinit var stickerCanvas: StickerCanvas
             private lateinit var stickerRecyclerView: RecyclerView
 
+
+            private lateinit var btnUndo: ImageView
+            private lateinit var btnRedo: ImageView
         
             private lateinit var btnSave: MaterialCardView
         
@@ -369,6 +372,8 @@
         
                 leftShade = findViewById(R.id.leftShade)
                 rightShade = findViewById(R.id.rightShade)
+                btnUndo = findViewById(R.id.btnUndo)
+                btnRedo = findViewById(R.id.btnRedo)
         
                 brightnessSeekBar = findViewById(R.id.brightnessSeekBar)
         
@@ -639,7 +644,14 @@
                         if (colorScroll.visibility == View.VISIBLE) View.GONE else View.VISIBLE
                     true
                 }
-        
+
+                btnUndo.setOnClickListener {
+                    stickerCanvas.undo()
+                }
+
+                btnRedo.setOnClickListener {
+                    stickerCanvas.redo()
+                }
                 txtOverlay.setOnTouchListener { view, event ->
                     scaleDetector.onTouchEvent(event)
                     when (event.actionMasked) {
