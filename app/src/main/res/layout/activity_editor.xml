@@ -43,10 +43,11 @@
         android:id="@+id/stickerCanvas"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        app:layout_constraintTop_toTopOf="@id/imagePreview"
-        app:layout_constraintBottom_toBottomOf="@id/imagePreview"
-        app:layout_constraintStart_toStartOf="@id/imagePreview"
-        app:layout_constraintEnd_toEndOf="@id/imagePreview"/>
+        android:elevation="15dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/filterRecyclerView"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"/>
 
 
     <!-- DRAGGABLE TEXT -->
@@ -521,5 +522,35 @@
         </LinearLayout>
 
     </HorizontalScrollView>
+    <!-- Undo Button -->
+    <ImageView
+        android:id="@+id/btnUndo"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="50dp"
+        android:layout_marginStart="16dp"
+        android:background="@drawable/bg_circle_dark"
+        android:padding="10dp"
+        android:src="@drawable/ic_undo"
+        app:tint="@android:color/white"
+        android:elevation="12dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"/>
+
+    <!-- Redo Button -->
+    <ImageView
+        android:id="@+id/btnRedo"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="50dp"
+        android:layout_marginStart="12dp"
+        android:background="@drawable/bg_circle_dark"
+        android:padding="10dp"
+        android:src="@drawable/ic_redo"
+        app:tint="@android:color/white"
+        android:elevation="12dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toEndOf="@id/btnUndo"/>
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>
