@@ -1,13 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="#000">
-
-    <!-- Top Bar -->
 
     <ImageView
         android:id="@+id/btnclose"
@@ -42,7 +39,6 @@
         app:tint="#FFFFFF"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
-    <!-- Video -->
 
     <FrameLayout
         android:id="@+id/playerContainer"
@@ -69,25 +65,17 @@
             android:background="@android:color/transparent"/>
     </FrameLayout>
 
-
-    <!-- Time -->
-
     <TextView
         android:id="@+id/timeText"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
         android:text="00:00 / 00:00"
         android:textColor="#FFFFFF"
         android:textSize="18sp"
         app:layout_constraintBottom_toTopOf="@id/trimContainer"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
-
-    <!-- Thumbnail Strip -->
-
-
-
-    <!-- Temporary SeekBar -->
 
     <FrameLayout
         android:id="@+id/trimContainer"
@@ -101,21 +89,17 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <!-- Thumbnail Strip -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/thumbRecycler"
             android:layout_width="match_parent"
             android:layout_height="match_parent"/>
 
-        <!-- Left Dark Area -->
         <View
             android:id="@+id/leftShade"
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:background="#99000000"/>
 
-
-        <!-- Right Dark Area -->
         <View
             android:id="@+id/rightShade"
             android:layout_width="0dp"
@@ -135,8 +119,6 @@
             android:layout_height="match_parent"
             android:background="@android:color/white"/>
 
-
-        <!-- Left Handle -->
         <ImageView
             android:id="@+id/leftHandle"
             android:layout_width="24dp"
@@ -144,14 +126,12 @@
             android:layout_gravity="start"
             android:background="@drawable/trim_handle"/>
 
-        <!-- Right Handle -->
         <ImageView
             android:id="@+id/rightHandle"
             android:layout_width="18dp"
             android:layout_height="match_parent"
             android:layout_gravity="end"
             android:background="@drawable/trim_handle"/>
-
     </FrameLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
