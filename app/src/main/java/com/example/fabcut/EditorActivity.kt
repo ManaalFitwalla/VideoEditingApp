@@ -37,6 +37,9 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.effect.RgbFilter
+import androidx.media3.effect.OverlayEffect
+import androidx.media3.effect.TextureOverlay
+import androidx.media3.effect.BitmapOverlay
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
 import androidx.recyclerview.widget.GridLayoutManager
@@ -60,6 +63,7 @@ import kotlin.math.pow
 import kotlin.math.sin
 import kotlin.math.sqrt
 
+@UnstableApi
 class EditorActivity : AppCompatActivity() {
 
     private var activeTextView: TextView? = null
@@ -205,55 +209,46 @@ class EditorActivity : AppCompatActivity() {
         }
     }
 
+    private fun getMatrixForFilter(filterName: String): FloatArray? {
+        return when (filterName) {
+            "Bright" -> floatArrayOf(
+                1.25f, 0f, 0f, 0f,
+                0f, 1.25f, 0f, 0f,
+                0f, 0f, 1.25f, 0f,
+                0f, 0f, 0f, 1f
+            )
+            "Cool" -> floatArrayOf(
+                0.85f, 0f, 0f, 0f,
+                0f, 1.0f, 0f, 0f,
+                0f, 0f, 1.30f, 0f,
+                0f, 0f, 0f, 1f
+            )
+            "Warm" -> floatArrayOf(
+                1.25f, 0f, 0f, 0f,
+                0f, 1.10f, 0f, 0f,
+                0f, 0f, 0.80f, 0f,
+                0f, 0f, 0f, 1f
+            )
+            "Vintage" -> floatArrayOf(
+                0.90f, 0.10f, 0.10f, 0f,
+                0.10f, 0.80f, 0.10f, 0f,
+                0.10f, 0.10f, 0.60f, 0f,
+                0f, 0f, 0f, 1f
+            )
+            else -> null
+        }
+    }
+
     @UnstableApi
     private fun previewSelectedFilter() {
         try {
-            when (selectedVideoFilter) {
-                "Original" -> player.setVideoEffects(emptyList())
-
-                "Bright" -> {
-                    val brightMatrix = floatArrayOf(
-                        1.25f, 0f, 0f, 0f,
-                        0f, 1.25f, 0f, 0f,
-                        0f, 0f, 1.25f, 0f,
-                        0f, 0f, 0f, 1f
-                    )
-                    player.setVideoEffects(listOf(androidx.media3.effect.RgbMatrix { _, _ -> brightMatrix }))
-                }
-
-                "Cool" -> {
-                    val coolMatrix = floatArrayOf(
-                        0.85f, 0f, 0f, 0f,
-                        0f, 1.0f, 0f, 0f,
-                        0f, 0f, 1.30f, 0f,
-                        0f, 0f, 0f, 1f
-                    )
-                    player.setVideoEffects(listOf(androidx.media3.effect.RgbMatrix { _, _ -> coolMatrix }))
-                }
-
-                "Warm" -> {
-                    val warmMatrix = floatArrayOf(
-                        1.25f, 0f, 0f, 0f,
-                        0f, 1.10f, 0f, 0f,
-                        0f, 0f, 0.80f, 0f,
-                        0f, 0f, 0f, 1f
-                    )
-                    player.setVideoEffects(listOf(androidx.media3.effect.RgbMatrix { _, _ -> warmMatrix }))
-                }
-
-                "Vintage" -> {
-                    val vintageMatrix = floatArrayOf(
-                        0.90f, 0.10f, 0.10f, 0f,
-                        0.10f, 0.80f, 0.10f, 0f,
-                        0.10f, 0.10f, 0.60f, 0f,
-                        0f, 0f, 0f, 1f
-                    )
-                    player.setVideoEffects(listOf(androidx.media3.effect.RgbMatrix { _, _ -> vintageMatrix }))
-                }
-
-                "B&W" -> {
-                    player.setVideoEffects(listOf(RgbFilter.createGrayscaleFilter()))
-                }
+            val matrix = getMatrixForFilter(selectedVideoFilter)
+            if (matrix != null) {
+                player.setVideoEffects(listOf(androidx.media3.effect.RgbMatrix { _, _ -> matrix }))
+            } else if (selectedVideoFilter == "B&W") {
+                player.setVideoEffects(listOf(RgbFilter.createGrayscaleFilter()))
+            } else {
+                player.setVideoEffects(emptyList())
             }
         } catch (e: Exception) {
             e.printStackTrace()
@@ -362,7 +357,6 @@ class EditorActivity : AppCompatActivity() {
                         addRule(RelativeLayout.CENTER_IN_PARENT)
                     }
 
-                    // Fixed: Pass it through our standard transform tracking system
                     textView.layoutParams = oParams
                     setupTransformTouchListener(textView, isText = true)
                     textOverlayContainer.addView(textView)
@@ -575,7 +569,6 @@ class EditorActivity : AppCompatActivity() {
                 addRule(RelativeLayout.CENTER_IN_PARENT)
             }
 
-            // Fixed: Link the layout configurations directly to the system listener
             stickerView.layoutParams = sParams
             setupTransformTouchListener(stickerView, isText = false)
             textOverlayContainer.addView(stickerView)
@@ -777,6 +770,157 @@ class EditorActivity : AppCompatActivity() {
             btnSave.visibility = View.VISIBLE
         }
 
+        btnSave.setOnClickListener {
+            val isVideoMode = intent.getBooleanExtra("IS_VIDEO", false)
+            val sharedPrefs = getSharedPreferences("FabCut_Prefs", android.content.Context.MODE_PRIVATE)
+
+            if (isVideoMode) {
+                if (mediaUri.isNotEmpty() && trimEnd > trimStart) {
+                    val inputUri = Uri.parse(mediaUri)
+
+                    // Standard temporary directory staging path
+                    val tempOutputFile = java.io.File(cacheDir, "FabCut_Export_${System.currentTimeMillis()}.mp4")
+
+                    val mediaItem = MediaItem.Builder()
+                        .setUri(inputUri)
+                        .setClippingConfiguration(MediaItem.ClippingConfiguration.Builder()
+                            .setStartPositionMs(trimStart)
+                            .setEndPositionMs(trimEnd)
+                            .build())
+                        .build()
+
+                    val effectsList = ArrayList<androidx.media3.common.Effect>()
+
+                    val filterMatrix = getMatrixForFilter(selectedVideoFilter)
+                    if (filterMatrix != null) {
+                        effectsList.add(androidx.media3.effect.RgbMatrix { _, _ -> filterMatrix })
+                    } else if (selectedVideoFilter == "B&W") {
+                        effectsList.add(RgbFilter.createGrayscaleFilter())
+                    }
+
+                    if (textOverlayContainer.childCount > 0) {
+                        val containerWidth = if (textOverlayContainer.width > 0) textOverlayContainer.width else 720
+                        val containerHeight = if (textOverlayContainer.height > 0) textOverlayContainer.height else 1280
+
+                        val overlayBitmap = Bitmap.createBitmap(
+                            containerWidth,
+                            containerHeight,
+                            Bitmap.Config.ARGB_8888
+                        )
+                        val canvas = Canvas(overlayBitmap)
+                        textOverlayContainer.draw(canvas)
+
+                        val textureOverlay = BitmapOverlay.createStaticBitmapOverlay(overlayBitmap)
+                        effectsList.add(OverlayEffect(listOf(textureOverlay)))
+                    }
+
+                    // Default builder configuration handles fallbacks explicitly across standard Android devices
+                    val transformer = androidx.media3.transformer.Transformer.Builder(this).build()
+
+                    // Safe fallback setup: removes complex timing constraints that fail on custom architectures
+                    val editedMediaItem = androidx.media3.transformer.EditedMediaItem.Builder(mediaItem)
+                        .setEffects(androidx.media3.transformer.Effects(emptyList(), effectsList))
+                        .build()
+
+                    android.widget.Toast.makeText(this, "Saving video... please wait.", android.widget.Toast.LENGTH_LONG).show()
+
+                    transformer.addListener(object : androidx.media3.transformer.Transformer.Listener {
+                        override fun onCompleted(composition: androidx.media3.transformer.Composition, exportResult: androidx.media3.transformer.ExportResult) {
+                            val filename = "FabCut_${System.currentTimeMillis()}.mp4"
+                            val contentValues = android.content.ContentValues().apply {
+                                put(android.provider.MediaStore.MediaColumns.DISPLAY_NAME, filename)
+                                put(android.provider.MediaStore.MediaColumns.MIME_TYPE, "video/mp4")
+                                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                                    put(android.provider.MediaStore.MediaColumns.RELATIVE_PATH, "Movies/FabCut")
+                                }
+                            }
+
+                            try {
+                                val videoUri = contentResolver.insert(android.provider.MediaStore.Video.Media.EXTERNAL_CONTENT_URI, contentValues)
+                                if (videoUri != null) {
+                                    contentResolver.openOutputStream(videoUri)?.use { outputStream ->
+                                        tempOutputFile.inputStream().use { inputStream ->
+                                            inputStream.copyTo(outputStream)
+                                        }
+                                    }
+
+                                    val history = sharedPrefs.getStringSet("recent_projects", emptySet()) ?: emptySet()
+                                    val updatedHistory = HashSet<String>(history)
+                                    updatedHistory.add(videoUri.toString())
+                                    sharedPrefs.edit().putStringSet("recent_projects", updatedHistory).apply()
+                                }
+
+                                if (tempOutputFile.exists()) tempOutputFile.delete()
+
+                                runOnUiThread {
+                                    android.widget.Toast.makeText(this@EditorActivity, "Video saved to Gallery!", android.widget.Toast.LENGTH_SHORT).show()
+                                    finish()
+                                }
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                                runOnUiThread {
+                                    android.widget.Toast.makeText(this@EditorActivity, "Gallery Save Failed.", android.widget.Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        }
+
+                        override fun onError(composition: androidx.media3.transformer.Composition, exportResult: androidx.media3.transformer.ExportResult, exportException: androidx.media3.transformer.ExportException) {
+                            if (tempOutputFile.exists()) tempOutputFile.delete()
+                            runOnUiThread {
+                                // Direct diagnostic message mapping to reveal the underlying media issue
+                                android.widget.Toast.makeText(this@EditorActivity, "Error: ${exportException.localizedMessage ?: "Codec Failure"}", android.widget.Toast.LENGTH_LONG).show()
+                            }
+                        }
+                    })
+
+                    try {
+                        transformer.start(editedMediaItem, tempOutputFile.absolutePath)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        if (tempOutputFile.exists()) tempOutputFile.delete()
+                        android.widget.Toast.makeText(this, "Failed starting export engine.", android.widget.Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } else {
+                val bitmap = captureCompositeBitmap()
+                if (bitmap != null) {
+                    val filename = "FabCut_${System.currentTimeMillis()}.jpg"
+                    var fos: java.io.OutputStream? = null
+
+                    val contentValues = android.content.ContentValues().apply {
+                        put(android.provider.MediaStore.MediaColumns.DISPLAY_NAME, filename)
+                        put(android.provider.MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
+                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+                            put(android.provider.MediaStore.MediaColumns.RELATIVE_PATH, "Pictures/FabCut")
+                        }
+                    }
+
+                    try {
+                        val imageUri = contentResolver.insert(android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+                        if (imageUri != null) {
+                            fos = contentResolver.openOutputStream(imageUri)
+                            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos!!)
+                            fos.flush()
+
+                            val targetPath = imageUri.toString()
+                            val history = sharedPrefs.getStringSet("recent_projects", emptySet()) ?: emptySet()
+                            val updatedHistory = HashSet<String>(history)
+                            updatedHistory.add(targetPath)
+                            sharedPrefs.edit().putStringSet("recent_projects", updatedHistory).apply()
+
+                            android.widget.Toast.makeText(this, "Image saved to Gallery!", android.widget.Toast.LENGTH_SHORT).show()
+                            finish()
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        android.widget.Toast.makeText(this, "Failed to save image", android.widget.Toast.LENGTH_SHORT).show()
+                    } finally {
+                        fos?.close()
+                    }
+                }
+            }
+        }
+
         thumbRecycler.layoutManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
         thumbRecycler.addOnScrollListener(object : RecyclerView.OnScrollListener() {
             override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
@@ -949,7 +1093,6 @@ class EditorActivity : AppCompatActivity() {
             val ratioScrollContainer = chipFree.parent.parent as View
 
             if (isVideo) {
-                // FIXED: Boot up VideoTrimActivity using trimLauncher to capture returned timestamps
                 val trimIntent = Intent(this, VideoTrimActivity::class.java).apply {
                     putExtra("VIDEO_URI", mediaUri)
                 }

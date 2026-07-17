@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -8,38 +7,32 @@
     android:id="@+id/main"
     android:background="@drawable/app_bg">
 
-    <!-- Selected Count -->
-
     <TextView
         android:id="@+id/txtSelectedCount"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="10dp"
-        android:text="0 / 20 Selected"
+        android:layout_marginStart="20dp"
+        android:layout_marginTop="20dp"
+        android:text="0 / 1 Selected"
         android:textColor="#2196F3"
-        android:textSize="18sp"
+        android:textSize="20sp"
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"/>
-
-    <!-- Gallery -->
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginStart="8dp"
+        android:layout_marginStart="12dp"
         android:layout_marginTop="16dp"
-        android:layout_marginEnd="8dp"
+        android:layout_marginEnd="12dp"
         android:clipToPadding="false"
-        android:paddingBottom="12dp"
+        android:paddingBottom="16dp"
         app:layout_constraintTop_toBottomOf="@id/txtSelectedCount"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
-
-    <!-- Proceed Button -->
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btnProceed"
