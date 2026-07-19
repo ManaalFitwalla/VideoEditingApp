@@ -207,7 +207,7 @@ class VideoTrimActivity : AppCompatActivity() {
 
                     val x = progress * trimContainer.width
 
-                            playHead.x = x.coerceIn(
+                    playHead.x = x.coerceIn(
                         leftHandle.x,
                         rightHandle.x
                     )
@@ -248,7 +248,7 @@ class VideoTrimActivity : AppCompatActivity() {
                 }
             }
         })
-        generateThumbnails(uri)
+        generateThumbnails(videoUri = uri)
         leftHandle.bringToFront()
         rightHandle.bringToFront()
 
@@ -310,12 +310,6 @@ class VideoTrimActivity : AppCompatActivity() {
                     timeText.text =
                         "${trimStart / 1000}s - ${trimEnd / 1000}s"
                 }
-
-                MotionEvent.ACTION_UP -> {
-                    // Keep the video paused
-                    player.pause()
-                    player.seekTo(trimStart)
-                }
             }
 
             true
@@ -371,12 +365,6 @@ class VideoTrimActivity : AppCompatActivity() {
 
                     timeText.text =
                         "${trimStart / 1000}s - ${trimEnd / 1000}s"
-                }
-
-                MotionEvent.ACTION_UP -> {
-                    // Stay paused and show the selected frame
-                    player.pause()
-                    player.seekTo(trimEnd)
                 }
             }
 

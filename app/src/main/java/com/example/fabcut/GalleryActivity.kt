@@ -1,5 +1,6 @@
 package com.example.fabcut
 
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -38,73 +39,69 @@ class GalleryActivity : AppCompatActivity() {
         btnProceed = findViewById(R.id.btnProceed)
         recyclerView = findViewById(R.id.recyclerView)
 
-        recyclerView.layoutManager = GridLayoutManager(this, 3)
-        recyclerView.addItemDecoration(ItemSpacingDecoration(8))
-
         btnProceed.visibility = View.GONE
 
         val mediaType = intent.getStringExtra("MEDIA_TYPE") ?: "PHOTO"
 
-        val maxLimit = 1
+        // Check if loading your See All / Saved Project view
+        if (mediaType == "SAVED_PROJECTS") {
+            // Style the header text to match the beautiful home palette theme color
+            txtSelectedCount.text = "Saved Projects"
+            txtSelectedCount.setTextColor(android.graphics.Color.parseColor("#D0BCFF"))
 
-        txtSelectedCount.text = "0 / 1 Selected"
+            // Set up a clean 2-column matrix layout for rounded project cards
+            recyclerView.layoutManager = GridLayoutManager(this, 2)
+            recyclerView.addItemDecoration(ItemSpacingDecoration(12))
 
-        mediaList = loadMedia(mediaType)
+            val sharedPrefs = getSharedPreferences("FabCut_Prefs", Context.MODE_PRIVATE)
+            val savedPaths = sharedPrefs.getStringSet("recent_projects", emptySet())?.toList()?.reversed() ?: emptyList()
 
-        adapter = MediaAdapter(
+            // Attach your direct gallery viewing adapter
+            val projectAdapter = RecentProjectsAdapter(this, savedPaths)
+            recyclerView.adapter = projectAdapter
 
-            mediaList,
+        } else {
+            // Default configuration for video, photo, and collage selection modes
+            recyclerView.layoutManager = GridLayoutManager(this, 3)
+            recyclerView.addItemDecoration(ItemSpacingDecoration(8))
 
-            maxLimit,
+            val maxLimit = 1
+            txtSelectedCount.text = "0 / 1 Selected"
+            txtSelectedCount.setTextColor(android.graphics.Color.parseColor("#2196F3"))
 
-            { mediaItem ->
+            mediaList = loadMedia(mediaType)
 
-                val previewIntent = Intent(this, PreviewActivity::class.java)
-                previewIntent.putExtra("MEDIA_URI", mediaItem.uri.toString())
-                previewIntent.putExtra("IS_VIDEO", mediaItem.isVideo)
-                startActivity(previewIntent)
-
-            },
-
-            { count ->
-
-                txtSelectedCount.text = "$count / 1 Selected"
-
-                btnProceed.visibility =
-                    if (count > 0) View.VISIBLE else View.GONE
-            }
-
-        )
-
-        recyclerView.adapter = adapter
+            adapter = MediaAdapter(
+                mediaList,
+                maxLimit,
+                { mediaItem ->
+                    val previewIntent = Intent(this, PreviewActivity::class.java)
+                    previewIntent.putExtra("MEDIA_URI", mediaItem.uri.toString())
+                    previewIntent.putExtra("IS_VIDEO", mediaItem.isVideo)
+                    startActivity(previewIntent)
+                },
+                { count ->
+                    txtSelectedCount.text = "$count / 1 Selected"
+                    btnProceed.visibility = if (count > 0) View.VISIBLE else View.GONE
+                }
+            )
+            recyclerView.adapter = adapter
+        }
 
         btnProceed.setOnClickListener {
-
-            val selectedItem =
-                mediaList.firstOrNull { it.isSelected }
-
-            if (selectedItem != null) {
-
-                val intent =
-                    Intent(this, EditorActivity::class.java)
-
-                intent.putExtra(
-                    "MEDIA_URI",
-                    selectedItem.uri.toString()
-                )
-
-                intent.putExtra(
-                    "IS_VIDEO",
-                    selectedItem.isVideo
-                )
-
-                startActivity(intent)
+            if (mediaType != "SAVED_PROJECTS") {
+                val selectedItem = mediaList.firstOrNull { it.isSelected }
+                if (selectedItem != null) {
+                    val intent = Intent(this, EditorActivity::class.java)
+                    intent.putExtra("MEDIA_URI", selectedItem.uri.toString())
+                    intent.putExtra("IS_VIDEO", selectedItem.isVideo)
+                    startActivity(intent)
+                }
             }
         }
     }
 
     private fun loadMedia(type: String): MutableList<MediaItem> {
-
         val list = mutableListOf<MediaItem>()
 
         val projection = arrayOf(
@@ -112,78 +109,45 @@ class GalleryActivity : AppCompatActivity() {
             MediaStore.Files.FileColumns.MEDIA_TYPE
         )
 
-        val mediaTypeValue =
-            if (type == "PHOTO")
-                MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE
-            else
-                MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO
+        val mediaTypeValue = if (type == "PHOTO")
+            MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE
+        else
+            MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO
 
-        val selection =
-            "${MediaStore.Files.FileColumns.MEDIA_TYPE}=?"
+        val selection = "${MediaStore.Files.FileColumns.MEDIA_TYPE}=?"
+        val selectionArgs = arrayOf(mediaTypeValue.toString())
+        val uri = MediaStore.Files.getContentUri("external")
 
-        val selectionArgs =
-            arrayOf(mediaTypeValue.toString())
-
-        val uri =
-            MediaStore.Files.getContentUri("external")
-
-        val cursor =
-            contentResolver.query(
-                uri,
-                projection,
-                selection,
-                selectionArgs,
-                "${MediaStore.Files.FileColumns.DATE_ADDED} DESC"
-            )
+        val cursor = contentResolver.query(
+            uri,
+            projection,
+            selection,
+            selectionArgs,
+            "${MediaStore.Files.FileColumns.DATE_ADDED} DESC"
+        )
 
         cursor?.use {
-
-            val idColumn =
-                it.getColumnIndexOrThrow(
-                    MediaStore.Files.FileColumns._ID
-                )
-
-            val typeColumn =
-                it.getColumnIndexOrThrow(
-                    MediaStore.Files.FileColumns.MEDIA_TYPE
-                )
+            val idColumn = it.getColumnIndexOrThrow(MediaStore.Files.FileColumns._ID)
+            val typeColumn = it.getColumnIndexOrThrow(MediaStore.Files.FileColumns.MEDIA_TYPE)
 
             while (it.moveToNext()) {
+                val id = it.getLong(idColumn)
+                val mediaType = it.getInt(typeColumn)
 
-                val id =
-                    it.getLong(idColumn)
-
-                val mediaType =
-                    it.getInt(typeColumn)
-
-                val contentUri =
-                    if (mediaType ==
-                        MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE
-                    ) {
-
-                        Uri.withAppendedPath(
-                            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                            id.toString()
-                        )
-
-                    } else {
-
-                        Uri.withAppendedPath(
-                            MediaStore.Video.Media.EXTERNAL_CONTENT_URI,
-                            id.toString()
-                        )
-                    }
+                val contentUri = if (mediaType == MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE) {
+                    Uri.withAppendedPath(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id.toString())
+                } else {
+                    Uri.withAppendedPath(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, id.toString())
+                }
 
                 list.add(
                     MediaItem(
                         contentUri,
-                        mediaType ==
-                                MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO
+                        mediaType == MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO
                     )
                 )
             }
         }
-
         return list
     }
 }
